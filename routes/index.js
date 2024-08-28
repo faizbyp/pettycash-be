@@ -1,14 +1,16 @@
 const express = require("express");
 const router = express.Router();
-//import controllers here
+const Item = require("./Item");
+// import controllers here
 const Example = require("../controllers/ExampleController");
 
-//@using router
+// @ using router
 // router.use('/api/<endpoint>', <controller>)
+router.use("/api/item", Item);
 
 router.use("/api", (req, res) => {
   res.status(200).send({
-    message: "Connected",
+    message: "Welcome to Petty Cash API",
   });
 });
 
