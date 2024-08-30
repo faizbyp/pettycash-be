@@ -1,9 +1,9 @@
 const db = require("../config/connection");
 const TRANS = require("../config/transaction");
 
-Vendor = {};
+Company = {};
 
-// Vendor.getAll = async () => {
+// Company.getAll = async () => {
 //   const client = await db.connect();
 //   try {
 //     await client.query(TRANS.BEGIN);
@@ -21,4 +21,4 @@ Vendor = {};
 //   }
 // };
 
-module.exports = Vendor;
+module.exports = Company;

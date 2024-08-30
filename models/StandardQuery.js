@@ -1,14 +1,12 @@
 const db = require("../config/connection");
 const TRANS = require("../config/transaction");
 
-Item = {};
-
-Item.getAll = async () => {
+const getAll = async (table) => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
     const q = `
-      SELECT * FROM mst_item;
+      SELECT * FROM ${table};
       `;
     const result = await client.query(q);
     await client.query(TRANS.COMMIT);
@@ -21,4 +19,6 @@ Item.getAll = async () => {
   }
 };
 
-module.exports = Item;
+module.exports = {
+  getAll,
+};
