@@ -1,11 +1,11 @@
-const Item = require("../models/ItemModel");
+const Vendor = require("../models/VendorModel");
 
-const ItemController = {
+const VendorController = {
   getAll: async (req, res) => {
     try {
-      let result = await Item.getAll();
+      let result = await Vendor.getAll();
       res.status(200).send({
-        message: `Success get items`,
+        message: `Success get vendor`,
         data: result,
       });
     } catch (err) {
@@ -16,4 +16,4 @@ const ItemController = {
   },
 };
 
-module.exports = ItemController;
+module.exports = VendorController;
