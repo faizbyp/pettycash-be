@@ -1,7 +1,7 @@
 const db = require("../config/connection");
 const TRANS = require("../config/transaction");
 
-const getAll = async (table) => {
+const getAllFromTable = async (table) => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
@@ -20,5 +20,5 @@ const getAll = async (table) => {
 };
 
 module.exports = {
-  getAll,
+  getAllFromTable,
 };

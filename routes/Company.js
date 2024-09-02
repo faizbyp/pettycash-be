@@ -1,7 +1,8 @@
 const express = require("express");
-const CompanyController = require("../controllers/CompanyController");
+const { handleGetAllCompany, handleGetCompanyById } = require("../controllers/CompanyController");
 const router = express.Router();
 
-router.get("/", CompanyController.getAll);
+router.get("/", handleGetAllCompany);
+router.get("/:id_company", handleGetCompanyById);
 
 module.exports = router;

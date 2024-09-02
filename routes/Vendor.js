@@ -1,7 +1,8 @@
 const express = require("express");
-const VendorController = require("../controllers/VendorController");
+const { handleGetAllVendor, handleGetVendorById } = require("../controllers/VendorController");
 const router = express.Router();
 
-router.get("/", VendorController.getAll);
+router.get("/", handleGetAllVendor);
+router.get("/:id_vendor", handleGetVendorById);
 
 module.exports = router;
