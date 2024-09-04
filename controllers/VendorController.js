@@ -8,9 +8,9 @@ const handleGetAllVendor = async (req, res) => {
       message: `Success get vendors`,
       data: result,
     });
-  } catch (err) {
+  } catch (error) {
     res.status(500).send({
-      message: err.stack,
+      message: error.stack,
     });
   }
 };
@@ -23,9 +23,9 @@ const handleGetVendorById = async (req, res) => {
       message: `Success get vendor ${id}`,
       data: result,
     });
-  } catch (err) {
+  } catch (error) {
     res.status(500).send({
-      message: err.stack,
+      message: error.stack,
     });
   }
 };

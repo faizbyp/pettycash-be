@@ -11,10 +11,10 @@ const postPO = async (payload) => {
     const result = await client.query(query, value);
     await client.query(TRANS.COMMIT);
     return result.rows[0].id_po;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.log(error);
     await client.query(TRANS.ROLLBACK);
-    throw err;
+    throw error;
   } finally {
     client.release();
   }

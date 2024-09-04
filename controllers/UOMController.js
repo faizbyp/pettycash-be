@@ -7,9 +7,9 @@ const handleGetAllUOM = async (req, res) => {
       message: `Success get UOM`,
       data: result,
     });
-  } catch (err) {
+  } catch (error) {
     res.status(500).send({
-      message: err.stack,
+      message: error.stack,
     });
   }
 };

@@ -8,9 +8,9 @@ const handlePostPO = async (req, res) => {
       message: "Success add PO",
       id_po: result,
     });
-  } catch (err) {
+  } catch (error) {
     res.status(500).send({
-      message: err.stack,
+      message: error.stack,
     });
   }
 };

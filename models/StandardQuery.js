@@ -11,8 +11,8 @@ const getAllFromTable = async (table) => {
     const result = await client.query(q);
     await client.query(TRANS.COMMIT);
     return result.rows;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.log(error);
     await client.query(TRANS.ROLLBACK);
   } finally {
     client.release();

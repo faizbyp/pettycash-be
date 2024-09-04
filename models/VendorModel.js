@@ -11,10 +11,10 @@ const getVendorById = async (id) => {
     const result = await client.query(q, [id]);
     await client.query(TRANS.COMMIT);
     return result.rows[0];
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.log(error);
     await client.query(TRANS.ROLLBACK);
-    throw err;
+    throw error;
   } finally {
     client.release();
   }
