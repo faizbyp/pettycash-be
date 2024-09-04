@@ -14,6 +14,7 @@ const getCompanyById = async (id) => {
   } catch (err) {
     console.log(err);
     await client.query(TRANS.ROLLBACK);
+    throw err;
   } finally {
     client.release();
   }
