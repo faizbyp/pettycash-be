@@ -5,7 +5,8 @@ const handlePostPO = async (req, res) => {
     const payload = req.body.data;
     let result = await postPO(payload);
     res.status(200).send({
-      message: result,
+      message: "Success add PO",
+      id_po: result,
     });
   } catch (err) {
     res.status(500).send({
