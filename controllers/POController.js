@@ -4,11 +4,16 @@ const { v4: uuidv4 } = require("uuid");
 
 const handlePostPO = async (req, res) => {
   try {
-    const payload = req.body.data;
+    let payload = req.body.data;
     let itemPayload = payload.items;
 
     // PO payload
     delete payload.items;
+    payload = {
+      ...payload,
+      ppn: payload.ppn ? 0.11 : 0,
+    };
+    console.log(payload);
     let result = await postPO(payload);
     // PO item payload
     itemPayload = itemPayload.map((item) => ({
