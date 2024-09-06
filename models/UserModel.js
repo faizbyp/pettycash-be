@@ -1,8 +1,65 @@
 const db = require("../config/connection");
 const TRANS = require("../config/transaction");
 const { createOTP, validateOTP } = require("../helper/auth/OTP");
+const { validatePassword } = require("../helper/auth/password");
 const { insertQuery, deleteQuery } = require("../helper/queryBuilder");
 const Emailer = require("../service/mail");
+const jwt = require("jsonwebtoken");
+
+const loginUser = async (emailOrUname, password) => {
+  const client = await db.connect();
+  try {
+    await client.query(TRANS.BEGIN);
+    // if (process.env.MYSQLDB === "mrbapp") {
+    //   now = convertTZ(now, "Asia/Jakarta");
+    // }
+    const checkUserData = await client.query(
+      "SELECT * FROM mst_user WHERE username = $1 OR email = $2",
+      [emailOrUname, emailOrUname]
+    );
+    if (checkUserData.rows.length === 0) {
+      throw new Error("User Not Found");
+    }
+    const data = checkUserData.rows[0];
+    await client.query(TRANS.COMMIT);
+    const refreshToken = jwt.sign(
+      {
+        email: data.email,
+        username: data.username,
+        name: data.name,
+        id_user: data.id_user,
+      },
+      process.env.SECRETJWT,
+      { expiresIn: "6h" }
+    );
+    const accessToken = jwt.sign(
+      {
+        email: data.email,
+        username: data.username,
+        name: data.name,
+        id_user: data.id_user,
+      },
+      process.env.SECRETJWT,
+      { expiresIn: "5m" }
+    );
+    if (data) {
+      const valid = await validatePassword(password, data.password);
+      if (!valid) {
+        throw new Error("Invalid Password");
+      } else {
+        return { data, accessToken, refreshToken };
+      }
+    } else {
+      throw new Error("User Not Found");
+    }
+  } catch (error) {
+    await client.query(TRANS.ROLLBACK);
+    console.error(error);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
 
 const registerUser = async (payload) => {
   const client = await db.connect();
@@ -89,4 +146,5 @@ const verifyUser = async (email, otp) => {
 module.exports = {
   registerUser,
   verifyUser,
+  loginUser,
 };
