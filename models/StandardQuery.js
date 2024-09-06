@@ -5,10 +5,10 @@ const getAllFromTable = async (table) => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
-    const q = `
+    const query = `
       SELECT * FROM ${table};
       `;
-    const result = await client.query(q);
+    const result = await client.query(query);
     await client.query(TRANS.COMMIT);
     return result.rows;
   } catch (error) {

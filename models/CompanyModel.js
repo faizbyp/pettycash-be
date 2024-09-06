@@ -5,10 +5,10 @@ const getCompanyById = async (id) => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
-    const q = `
+    const query = `
       SELECT * FROM mst_company WHERE id_company = $1;
       `;
-    const result = await client.query(q, [id]);
+    const result = await client.query(query, [id]);
     await client.query(TRANS.COMMIT);
     return result.rows[0];
   } catch (error) {

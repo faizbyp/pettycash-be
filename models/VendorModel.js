@@ -5,10 +5,10 @@ const getVendorById = async (id) => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
-    const q = `
+    const query = `
       SELECT * FROM mst_vendor WHERE id_vendor = $1;
       `;
-    const result = await client.query(q, [id]);
+    const result = await client.query(query, [id]);
     await client.query(TRANS.COMMIT);
     return result.rows[0];
   } catch (error) {

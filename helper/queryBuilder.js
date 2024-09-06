@@ -41,6 +41,17 @@ const insertQuery = (table, values, returning = null) => {
   return [query, valueArray];
 };
 
+const deleteQuery = (table, where) => {
+  let query = "";
+  let valueArray = [];
+  const whereArray = Object.keys(where).map((item, index) => {
+    valueArray.push(where[item]);
+    return `${item} = $${index + 1}`;
+  });
+  query = "DELETE FROM " + table + " WHERE " + whereArray.join(" AND ") + ";";
+  return [query, valueArray];
+};
+
 // const updateItem = (toTable, val, where, returning = null) => {
 //   let value = [];
 //   let insertCol = [];
@@ -68,4 +79,5 @@ const insertQuery = (table, values, returning = null) => {
 
 module.exports = {
   insertQuery,
+  deleteQuery,
 };
