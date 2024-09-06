@@ -9,7 +9,7 @@ const handleGetAllUOM = async (req, res) => {
     });
   } catch (error) {
     res.status(500).send({
-      message: error.stack,
+      message: error.message,
     });
   }
 };
