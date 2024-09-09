@@ -1,5 +1,5 @@
 const { postPOItem } = require("../models/POItemModel");
-const { postPO, getPOByUser } = require("../models/POModel");
+const { postPO, getPOByUser, getPOById } = require("../models/POModel");
 const { v4: uuidv4 } = require("uuid");
 
 const handlePostPO = async (req, res) => {
@@ -51,7 +51,24 @@ const handleGetPOByUser = async (req, res) => {
   }
 };
 
+const handleGetPOById = async (req, res) => {
+  const id_po = decodeURIComponent(req.params.id_po);
+  try {
+    const result = await getPOById(id_po);
+    console.log(result);
+    res.status(200).send({
+      message: `Success get PO: ${id_po}`,
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   handlePostPO,
   handleGetPOByUser,
+  handleGetPOById,
 };

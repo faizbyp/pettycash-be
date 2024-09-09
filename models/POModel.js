@@ -42,12 +42,58 @@ const getPOByUser = async (id_user) => {
       [id_user]
     );
     await client.query(TRANS.COMMIT);
-
-    // const finalResult = result.rows.map((row) => ({
-    //   company_name: row.name,
-    // }));
-
     return result.rows;
+  } catch (error) {
+    console.log(error);
+    await client.query(TRANS.ROLLBACK);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+const getPOById = async (id_po) => {
+  const client = await db.connect();
+  try {
+    await client.query(TRANS.BEGIN);
+    const result = await client.query(
+      `
+      SELECT * FROM purchase_order WHERE id_po = $1
+      `,
+      [id_po]
+    );
+
+    const companyResult = await client.query(
+      `
+      SELECT * FROM mst_company WHERE id_company = $1
+      `,
+      [result.rows[0].id_company]
+    );
+
+    const vendorResult = await client.query(
+      `
+      SELECT * FROM mst_vendor WHERE id_vendor = $1
+      `,
+      [result.rows[0].id_vendor]
+    );
+
+    const itemResult = await client.query(
+      `
+      SELECT id_po_item, description, unit_price, qty, uom, amount
+      FROM purchase_order_item WHERE id_po = $1
+      `,
+      [id_po]
+    );
+    await client.query(TRANS.COMMIT);
+
+    const finalResult = {
+      ...result.rows[0],
+      company: companyResult.rows[0],
+      vendor: vendorResult.rows[0],
+      items: itemResult.rows,
+    };
+
+    return finalResult;
   } catch (error) {
     console.log(error);
     await client.query(TRANS.ROLLBACK);
@@ -60,4 +106,5 @@ const getPOByUser = async (id_user) => {
 module.exports = {
   postPO,
   getPOByUser,
+  getPOById,
 };
