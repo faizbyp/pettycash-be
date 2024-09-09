@@ -3,13 +3,14 @@ const { hashPassword } = require("../helper/auth/password");
 const { registerUser, verifyUser, loginUser } = require("../models/UserModel");
 
 const handleLoginUser = async (req, res) => {
-  const emailOrUname = req.body.emailOrUname;
+  const emailOrUname = req.body.username;
   const password = req.body.password;
   try {
     const { data, accessToken, refreshToken } = await loginUser(emailOrUname, password);
     res.status(200).send({
       message: `Success sign in, welcome ${data.name}`,
       data: {
+        name: data.name,
         username: data.username,
         email: data.email,
         id_user: data.id_user,
@@ -36,7 +37,7 @@ const handleRegisterUser = async (req, res) => {
     password: password,
     email: email,
     id_user: uuidv4(),
-    id_role: "123",
+    id_role: "IaKgzAxkTeBRQlFVaVphGMa8etPpum37y56IeS9WBPE=",
   };
   try {
     const result = await registerUser(payload);
