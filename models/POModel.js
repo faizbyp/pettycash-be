@@ -63,27 +63,16 @@ const getPOById = async (id_po) => {
       [id_po]
     );
 
-    const companyResult = await client.query(
-      `
-      SELECT * FROM mst_company WHERE id_company = $1
-      `,
-      [result.rows[0].id_company]
-    );
+    if (result.rows.length === 0) {
+      throw new Error("PO not found");
+    }
 
-    const vendorResult = await client.query(
-      `
-      SELECT * FROM mst_vendor WHERE id_vendor = $1
-      `,
-      [result.rows[0].id_vendor]
-    );
+    const [companyResult, vendorResult, itemResult] = await Promise.all([
+      client.query(`SELECT * FROM mst_company WHERE id_company = $1`, [result.rows[0].id_company]),
+      client.query(`SELECT * FROM mst_vendor WHERE id_vendor = $1`, [result.rows[0].id_vendor]),
+      client.query(`SELECT * FROM purchase_order_item WHERE id_po = $1`, [id_po]),
+    ]);
 
-    const itemResult = await client.query(
-      `
-      SELECT id_po_item, description, unit_price, qty, uom, amount
-      FROM purchase_order_item WHERE id_po = $1
-      `,
-      [id_po]
-    );
     await client.query(TRANS.COMMIT);
 
     const finalResult = {
