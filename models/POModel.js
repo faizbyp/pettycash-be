@@ -124,9 +124,31 @@ const getAllPO = async () => {
   }
 };
 
+const POApproval = async (payload, id_po) => {
+  const client = await db.connect();
+  try {
+    await client.query(TRANS.BEGIN);
+    const result = await client.query(
+      `UPDATE purchase_order
+      SET status = $1, approval_by = $2, approval_date = $3
+      WHERE id_po = $4`,
+      [payload.status, payload.id_user, payload.approval_date, id_po]
+    );
+    await client.query(TRANS.COMMIT);
+    return result.rowCount;
+  } catch (error) {
+    console.log(error);
+    await client.query(TRANS.ROLLBACK);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   postPO,
   getPOByUser,
   getPOById,
   getAllPO,
+  POApproval,
 };

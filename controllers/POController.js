@@ -1,6 +1,7 @@
 const { postPOItem } = require("../models/POItemModel");
-const { postPO, getPOByUser, getPOById, getAllPO } = require("../models/POModel");
+const { postPO, getPOByUser, getPOById, getAllPO, POApproval } = require("../models/POModel");
 const { v4: uuidv4 } = require("uuid");
+var moment = require("moment-timezone");
 
 const handlePostPO = async (req, res) => {
   try {
@@ -79,9 +80,34 @@ const handleGetAllPO = async (req, res) => {
   }
 };
 
+const handlePOApproval = async (req, res) => {
+  let payload = req.body;
+  const id_po = decodeURIComponent(req.params.id_po);
+  try {
+    if (!payload.id_user || !payload.status || !payload.approval_date || !id_po) {
+      throw new Error("Bad Request");
+    }
+    const result = await POApproval(payload, id_po);
+    res.status(200).send({
+      message: `PO ${id_po} ${payload.status}`,
+    });
+  } catch (error) {
+    if (error.message === "Bad Request") {
+      res.status(400).send({
+        message: error.message,
+      });
+    } else {
+      res.status(500).send({
+        message: error.message,
+      });
+    }
+  }
+};
+
 module.exports = {
   handlePostPO,
   handleGetPOByUser,
   handleGetPOById,
   handleGetAllPO,
+  handlePOApproval,
 };
