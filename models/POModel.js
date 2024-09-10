@@ -128,12 +128,22 @@ const POApproval = async (payload, id_po) => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
-    const result = await client.query(
-      `UPDATE purchase_order
-      SET status = $1, approval_by = $2, approval_date = $3
-      WHERE id_po = $4`,
-      [payload.status, payload.id_user, payload.approval_date, id_po]
-    );
+    let result = null;
+    if (payload.status === "approved") {
+      result = await client.query(
+        `UPDATE purchase_order
+        SET status = $1, approval_by = $2, approval_date = $3
+        WHERE id_po = $4`,
+        [payload.status, payload.id_user, payload.approval_date, id_po]
+      );
+    } else if (payload.status === "rejected") {
+      result = await client.query(
+        `UPDATE purchase_order
+        SET status = $1, approval_by = $2, approval_date = $3, reject_notes = $4
+        WHERE id_po = $5`,
+        [payload.status, payload.id_user, payload.approval_date, payload.reject_notes, id_po]
+      );
+    }
     await client.query(TRANS.COMMIT);
     return result.rowCount;
   } catch (error) {
