@@ -1,5 +1,5 @@
 const { getAllFromTable } = require("../models/StandardQuery");
-const { getVendorById } = require("../models/VendorModel");
+const { getVendorById, addVendor } = require("../models/VendorModel");
 
 const handleGetAllVendor = async (req, res) => {
   try {
@@ -30,7 +30,23 @@ const handleGetVendorById = async (req, res) => {
   }
 };
 
+const handleAddVendor = async (req, res) => {
+  const payload = req.body;
+  try {
+    let result = await addVendor(payload);
+    res.status(200).send({
+      message: `Success add vendor`,
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   handleGetAllVendor,
   handleGetVendorById,
+  handleAddVendor,
 };
