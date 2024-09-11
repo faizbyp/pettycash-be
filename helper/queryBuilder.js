@@ -52,32 +52,32 @@ const deleteQuery = (table, where) => {
   return [query, valueArray];
 };
 
-// const updateItem = (toTable, val, where, returning = null) => {
-//   let value = [];
-//   let insertCol = [];
-//   let whereCol = [];
-//   delete val[`${where.col}`];
-//   Object.keys(val).forEach((key, ix) => {
-//     insertCol.push(key + ` = $${ix + 1}`);
-//   });
-//   Object.values(val).forEach((v) => {
-//     value.push(v);
-//   });
-//   Object.keys(where).forEach((key) => {
-//     whereCol.push(key + `= '${where[key]}'`);
-//   });
-//   let whereScr = whereCol.join(" and ");
-//   const qinsertCol = insertCol.join(", ");
-//   let query = `UPDATE ${toTable} SET ${qinsertCol} WHERE ${whereScr}`;
-//   if (returning != null) {
-//     query += `RETURNING ${returning}`;
-//   } else {
-//     query += " ;";
-//   }
-//   return [query, value];
-// };
+const updateQuery = (table, value, where, returning = null) => {
+  let valueArray = [];
+  let setArray = [];
+  let whereArray = [];
+  Object.keys(value).forEach((key, ix) => {
+    setArray.push(key + ` = $${ix + 1}`);
+  });
+  Object.values(value).forEach((v) => {
+    valueArray.push(v);
+  });
+  Object.keys(where).forEach((key) => {
+    whereArray.push(key + ` = '${where[key]}'`);
+  });
+  let whereString = whereArray.join(" AND ");
+  const setString = setArray.join(", ");
+  let query = `UPDATE ${table} SET ${setString} WHERE ${whereString}`;
+  if (returning != null) {
+    query += ` RETURNING ${returning}`;
+  } else {
+    query += " ;";
+  }
+  return [query, valueArray];
+};
 
 module.exports = {
   insertQuery,
   deleteQuery,
+  updateQuery,
 };

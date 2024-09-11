@@ -1,5 +1,5 @@
 const { getAllFromTable } = require("../models/StandardQuery");
-const { getVendorById, addVendor } = require("../models/VendorModel");
+const { getVendorById, addVendor, editVendor } = require("../models/VendorModel");
 
 const handleGetAllVendor = async (req, res) => {
   try {
@@ -45,8 +45,25 @@ const handleAddVendor = async (req, res) => {
   }
 };
 
+const handleEditVendor = async (req, res) => {
+  const payload = req.body;
+  const id_vendor = req.params.id_vendor;
+  try {
+    let result = await editVendor(payload, id_vendor);
+    res.status(200).send({
+      message: `Success edit vendor: ${id_vendor}`,
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   handleGetAllVendor,
   handleGetVendorById,
   handleAddVendor,
+  handleEditVendor,
 };
