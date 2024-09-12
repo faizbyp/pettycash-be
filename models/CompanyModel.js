@@ -1,6 +1,6 @@
 const db = require("../config/connection");
 const TRANS = require("../config/transaction");
-const { insertQuery } = require("../helper/queryBuilder");
+const { insertQuery, updateQuery } = require("../helper/queryBuilder");
 
 const getAllCompany = async (type, group) => {
   const client = await db.connect();
@@ -62,8 +62,31 @@ const addCompany = async (payload) => {
   }
 };
 
+const editCompany = async (payload, id) => {
+  const client = await db.connect();
+  try {
+    await client.query(TRANS.BEGIN);
+    const [query, value] = updateQuery(
+      "mst_company",
+      payload,
+      { id_company: id },
+      "id_company, company_name"
+    );
+    const result = await client.query(query, value);
+    await client.query(TRANS.COMMIT);
+    return result.rows[0];
+  } catch (error) {
+    console.log(error);
+    await client.query(TRANS.ROLLBACK);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   getAllCompany,
   getCompanyById,
   addCompany,
+  editCompany,
 };
