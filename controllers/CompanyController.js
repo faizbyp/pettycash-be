@@ -1,4 +1,4 @@
-const { getCompanyById, getAllCompany } = require("../models/CompanyModel");
+const { getCompanyById, getAllCompany, addCompany } = require("../models/CompanyModel");
 const { getAllFromTable } = require("../models/StandardQuery");
 
 const handleGetAllCompany = async (req, res) => {
@@ -32,7 +32,23 @@ const handleGetCompanyById = async (req, res) => {
   }
 };
 
+const handleAddCompany = async (req, res) => {
+  const payload = req.body;
+  try {
+    let result = await addCompany(payload);
+    res.status(200).send({
+      message: `Success add company`,
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   handleGetAllCompany,
   handleGetCompanyById,
+  handleAddCompany,
 };
