@@ -20,7 +20,7 @@ const postPO = async (payload) => {
   }
 };
 
-const getPOByUser = async (id_user) => {
+const getPOByUser = async (id_user, status) => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
@@ -38,8 +38,9 @@ const getPOByUser = async (id_user) => {
       JOIN mst_company c ON po.id_company = c.id_company
       JOIN mst_vendor v ON po.id_vendor = v.id_vendor
       WHERE po.id_user = $1
+      AND (po.status = $2 OR $3::VARCHAR IS NULL)
       `,
-      [id_user]
+      [id_user, status, status]
     );
     await client.query(TRANS.COMMIT);
     return result.rows;
