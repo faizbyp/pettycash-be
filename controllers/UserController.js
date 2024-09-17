@@ -27,6 +27,27 @@ const handleLoginUser = async (req, res) => {
   }
 };
 
+const refreshAccessToken = async (req, res) => {
+  const refreshToken = req.body?.refreshToken;
+  const payload = {
+    email: req.body.email,
+    username: req.body.username,
+    name: req.body.name,
+    id_user: req.body.id_user,
+  };
+  if (refreshToken === undefined) {
+    res.status(401).send({
+      message: "Unauthorized",
+    });
+  }
+  const newAccessToken = jwt.sign(payload, process.env.SECRETJWT, {
+    expiresIn: "6h",
+  });
+  res.status(200).send({
+    access_token: newAccessToken,
+  });
+};
+
 const handleRegisterUser = async (req, res) => {
   const email = req.body.email;
   const username = req.body.username;
@@ -66,4 +87,4 @@ const handleVerifyUser = async (req, res) => {
   }
 };
 
-module.exports = { handleRegisterUser, handleVerifyUser, handleLoginUser };
+module.exports = { handleRegisterUser, handleVerifyUser, handleLoginUser, refreshAccessToken };
