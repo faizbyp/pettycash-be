@@ -39,6 +39,7 @@ const getPOByUser = async (id_user, status) => {
       JOIN mst_vendor v ON po.id_vendor = v.id_vendor
       WHERE po.id_user = $1
       AND (po.status = $2 OR $3::VARCHAR IS NULL)
+      ORDER BY po_date DESC
       `,
       [id_user, status, status]
     );
@@ -112,6 +113,7 @@ const getAllPO = async () => {
       JOIN mst_company c ON po.id_company = c.id_company
       JOIN mst_vendor v ON po.id_vendor = v.id_vendor
       JOIN mst_user u ON po.id_user = u.id_user
+      ORDER BY po_date DESC
       `
     );
     await client.query(TRANS.COMMIT);
