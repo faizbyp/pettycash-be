@@ -5,11 +5,12 @@ const {
   handleAddVendor,
   handleEditVendor,
 } = require("../controllers/VendorController");
+const isAuth = require("../middleware/auth");
 const router = express.Router();
 
-router.get("/", handleGetAllVendor);
-router.get("/:id_vendor", handleGetVendorById);
-router.patch("/:id_vendor", handleEditVendor);
-router.post("/", handleAddVendor);
+router.get("/", isAuth, handleGetAllVendor);
+router.get("/:id_vendor", isAuth, handleGetVendorById);
+router.patch("/:id_vendor", isAuth, handleEditVendor);
+router.post("/", isAuth, handleAddVendor);
 
 module.exports = router;
