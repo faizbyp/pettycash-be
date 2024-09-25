@@ -4,6 +4,7 @@ const Company = require("./Company");
 const Vendor = require("./Vendor");
 const UOM = require("./UOM");
 const PO = require("./PO");
+const GR = require("./GR");
 const User = require("./User");
 // import controllers here
 const Example = require("../controllers/ExampleController");
@@ -14,6 +15,7 @@ router.use("/api/company", Company);
 router.use("/api/vendor", Vendor);
 router.use("/api/uom", UOM);
 router.use("/api/po", PO);
+router.use("/api/gr", GR);
 router.use("/api/user", User);
 
 router.use("/api", (req, res) => {
