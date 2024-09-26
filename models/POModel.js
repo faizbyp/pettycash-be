@@ -72,7 +72,20 @@ const getPOById = async (id_po) => {
     const [companyResult, vendorResult, itemResult] = await Promise.all([
       client.query(`SELECT * FROM mst_company WHERE id_company = $1`, [result.rows[0].id_company]),
       client.query(`SELECT * FROM mst_vendor WHERE id_vendor = $1`, [result.rows[0].id_vendor]),
-      client.query(`SELECT * FROM purchase_order_item WHERE id_po = $1`, [id_po]),
+      client.query(
+        `
+        SELECT
+          poi.*,
+          ABS(COALESCE(SUM(gri.qty), 0) - poi.qty) AS remaining_qty
+        FROM
+          purchase_order_item poi
+        LEFT JOIN
+          goods_receipt_item gri ON gri.id_po_item = poi.id_po_item
+          WHERE id_po = $1
+        GROUP BY
+          poi.id, poi.id_po_item, poi.qty`,
+        [id_po]
+      ),
     ]);
 
     await client.query(TRANS.COMMIT);
