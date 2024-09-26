@@ -1,7 +1,6 @@
-const { postPOItem } = require("../models/POItemModel");
 const { v4: uuidv4 } = require("uuid");
 const { parseFormUpload } = require("../helper/fileUpload");
-const { postGR } = require("../models/GRModel");
+const { postGR, getGRByUser } = require("../models/GRModel");
 const { postGRItem } = require("../models/GRItemModel");
 
 const handlePostGR = async (req, res) => {
@@ -46,4 +45,19 @@ const handlePostGR = async (req, res) => {
   }
 };
 
-module.exports = { handlePostGR };
+const handleGetGRByUser = async (req, res) => {
+  const id_user = req.params.id_user;
+  try {
+    const result = await getGRByUser(id_user);
+    res.status(200).send({
+      message: `Success get user GR: ${id_user}`,
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: error.message,
+    });
+  }
+};
+
+module.exports = { handlePostGR, handleGetGRByUser };
