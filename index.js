@@ -26,13 +26,19 @@ const corsOption = {
   exposedHeaders: ["set-cookie"],
 };
 
+app.use("/api/static", express.static("uploads")); // http://localhost:5001/static/invoice/filename.ext
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api/static")) {
+    return res.status(404).sendFile(path.join(__dirname, "public", "404-file.html"));
+  }
+  next();
+});
 app.use(credentials);
 app.use(cors(corsOption));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(routers);
-app.use("/static", express.static("uploads")); // http://localhost:5001/static/invoice/filename.ext
 
 app.listen(process.env.PORT, "0.0.0.0", () => {
   console.log(`App running on ${process.env.PORT}`);
