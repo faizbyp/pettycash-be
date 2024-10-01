@@ -3,6 +3,26 @@ const { parseFormUpload } = require("../helper/fileUpload");
 const { postGR, getGRByUser } = require("../models/GRModel");
 const { postGRItem } = require("../models/GRItemModel");
 const { getRemainingItem } = require("../models/POItemModel");
+const { getPOById, updatePOCompletion } = require("../models/POModel");
+
+const handleGetPOForGR = async (req, res) => {
+  const id_po = decodeURIComponent(req.params.id_po);
+  try {
+    let result = await getPOById(id_po);
+    result = {
+      ...result,
+      items: result.items.filter((item) => item.is_complete !== true),
+    };
+    res.status(200).send({
+      message: `Success get PO: ${id_po}`,
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: error.message,
+    });
+  }
+};
 
 const handlePostGR = async (req, res) => {
   try {
@@ -34,6 +54,8 @@ const handlePostGR = async (req, res) => {
     });
     console.log("item payload", itemPayload);
     await postGRItem(itemPayload);
+
+    await updatePOCompletion(payload.id_po);
 
     res.status(200).send({
       message: "Success create Order Confirmation",
@@ -75,4 +97,4 @@ const handleGetRemainingItem = async (req, res) => {
   }
 };
 
-module.exports = { handlePostGR, handleGetGRByUser, handleGetRemainingItem };
+module.exports = { handlePostGR, handleGetGRByUser, handleGetRemainingItem, handleGetPOForGR };

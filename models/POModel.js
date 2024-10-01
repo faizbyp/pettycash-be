@@ -20,7 +20,7 @@ const postPO = async (payload) => {
   }
 };
 
-const getPOByUser = async (id_user, status) => {
+const getPOByUser = async (id_user, status, is_complete) => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
@@ -38,10 +38,11 @@ const getPOByUser = async (id_user, status) => {
       JOIN mst_company c ON po.id_company = c.id_company
       JOIN mst_vendor v ON po.id_vendor = v.id_vendor
       WHERE po.id_user = $1
-      AND (po.status = $2 OR $3::VARCHAR IS NULL)
+      AND (po.status = $2 OR $2::VARCHAR IS NULL)
+      AND (po.is_complete = $3 OR $3::VARCHAR IS NULL)
       ORDER BY po_date DESC
       `,
-      [id_user, status, status]
+      [id_user, status, is_complete]
     );
     await client.query(TRANS.COMMIT);
     return result.rows;
@@ -171,10 +172,40 @@ const POApproval = async (payload, id_po) => {
   }
 };
 
+const updatePOCompletion = async (id_po) => {
+  const client = await db.connect();
+  try {
+    await client.query(TRANS.BEGIN);
+    const result = await client.query(
+      `
+      SELECT id_po_item, is_complete FROM purchase_order_item WHERE id_po = $1 AND is_complete <> true
+    `,
+      [id_po]
+    );
+    const allItemComplete = result.rows.length === 0;
+    let update = "tes";
+    if (allItemComplete) {
+      update = await client.query(`UPDATE purchase_order SET is_complete = true WHERE id_po = $1`, [
+        id_po,
+      ]);
+    }
+    console.log(update);
+    await client.query(TRANS.COMMIT);
+    return update.rows;
+  } catch (error) {
+    console.error(error);
+    await client.query(TRANS.ROLLBACK);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   postPO,
   getPOByUser,
   getPOById,
   getAllPO,
   POApproval,
+  updatePOCompletion,
 };

@@ -38,8 +38,9 @@ const handlePostPO = async (req, res) => {
 const handleGetPOByUser = async (req, res) => {
   const id_user = req.params.id_user;
   const status = req.query.status || null;
+  const is_complete = req.query.is_complete || null;
   try {
-    const result = await getPOByUser(id_user, status);
+    const result = await getPOByUser(id_user, status, is_complete);
     res.status(200).send({
       message: `Success get user PO: ${id_user}`,
       data: result,
