@@ -32,6 +32,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(routers);
+app.use("/static", express.static("uploads")); // http://localhost:5001/static/invoice/filename.ext
 
 app.listen(process.env.PORT, "0.0.0.0", () => {
   console.log(`App running on ${process.env.PORT}`);
