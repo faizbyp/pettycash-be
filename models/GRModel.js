@@ -55,4 +55,59 @@ const getGRByUser = async (id_user) => {
   }
 };
 
-module.exports = { postGR, getGRByUser };
+const getGRById = async (id_gr) => {
+  const client = await db.connect();
+  try {
+    await client.query(TRANS.BEGIN);
+    const result = await client.query(
+      `
+      SELECT gr.*, po.id_company, po.id_vendor
+      FROM goods_receipt gr 
+      JOIN purchase_order po ON po.id_po = gr.id_po
+      WHERE id_gr = $1
+      `,
+      [id_gr]
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error("GR not found");
+    }
+
+    const [companyResult, vendorResult, itemResult] = await Promise.all([
+      client.query(`SELECT * FROM mst_company WHERE id_company = $1`, [result.rows[0].id_company]),
+      client.query(`SELECT * FROM mst_vendor WHERE id_vendor = $1`, [result.rows[0].id_vendor]),
+      client.query(
+        `
+        SELECT
+          gri.*,
+          poi.uom,
+          poi.description
+        FROM
+          goods_receipt_item gri
+        JOIN
+          purchase_order_item poi ON poi.id_po_item = gri.id_po_item
+          WHERE id_gr = $1`,
+        [id_gr]
+      ),
+    ]);
+
+    await client.query(TRANS.COMMIT);
+
+    const finalResult = {
+      ...result.rows[0],
+      company: companyResult.rows[0],
+      vendor: vendorResult.rows[0],
+      items: itemResult.rows,
+    };
+
+    return finalResult;
+  } catch (error) {
+    console.log(error);
+    await client.query(TRANS.ROLLBACK);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+module.exports = { postGR, getGRByUser, getGRById };

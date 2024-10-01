@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require("uuid");
 const { parseFormUpload } = require("../helper/fileUpload");
-const { postGR, getGRByUser } = require("../models/GRModel");
+const { postGR, getGRByUser, getGRById } = require("../models/GRModel");
 const { postGRItem } = require("../models/GRItemModel");
 const { getRemainingItem } = require("../models/POItemModel");
 const { getPOById, updatePOCompletion } = require("../models/POModel");
@@ -83,6 +83,21 @@ const handleGetGRByUser = async (req, res) => {
   }
 };
 
+const handleGetGRById = async (req, res) => {
+  const id_gr = decodeURIComponent(req.params.id_gr);
+  try {
+    const result = await getGRById(id_gr);
+    res.status(200).send({
+      message: `Success get GR: ${id_gr}`,
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: error.message,
+    });
+  }
+};
+
 const handleGetRemainingItem = async (req, res) => {
   try {
     const result = await getRemainingItem();
@@ -97,4 +112,10 @@ const handleGetRemainingItem = async (req, res) => {
   }
 };
 
-module.exports = { handlePostGR, handleGetGRByUser, handleGetRemainingItem, handleGetPOForGR };
+module.exports = {
+  handlePostGR,
+  handleGetGRByUser,
+  handleGetRemainingItem,
+  handleGetPOForGR,
+  handleGetGRById,
+};
