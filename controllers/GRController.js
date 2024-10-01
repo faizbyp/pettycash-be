@@ -35,7 +35,7 @@ const handlePostGR = async (req, res) => {
     delete payload.items;
     payload = {
       ...payload,
-      id_gr: uuidv4(),
+      id_gr: "CFM" + Math.floor(1000 + Math.random() * 9000) + "-" + payload.id_po,
       ppn: payload.ppn ? 0.11 : 0,
       invoice_file: filename,
     };
