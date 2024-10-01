@@ -31,6 +31,7 @@ const getGRByUser = async (id_user) => {
         gr.id_po,
         gr.id_gr,
         gr.gr_date,
+        po.po_date,
         gr.grand_total,
         c.company_name,
         v.vendor_name
