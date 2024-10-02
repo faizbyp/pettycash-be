@@ -1,6 +1,7 @@
 const { v4: uuidv4 } = require("uuid");
 const { hashPassword } = require("../helper/auth/password");
 const { registerUser, verifyUser, loginUser } = require("../models/UserModel");
+const jwt = require("jsonwebtoken");
 
 const handleLoginUser = async (req, res) => {
   const emailOrUname = req.body.username;
@@ -44,7 +45,7 @@ const refreshAccessToken = async (req, res) => {
     expiresIn: "6h",
   });
   res.status(200).send({
-    access_token: newAccessToken,
+    accessToken: newAccessToken,
   });
 };
 
