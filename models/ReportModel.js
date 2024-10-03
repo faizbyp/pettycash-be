@@ -3,7 +3,7 @@ const TRANS = require("../config/transaction");
 const { insertQuery } = require("../helper/queryBuilder");
 const ExcelJS = require("exceljs");
 
-const getComparisonReport = async () => {
+const getComparisonReport = async (gr_date, po_date, company) => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
@@ -49,17 +49,16 @@ const getComparisonReport = async () => {
           goods_receipt_item gri ON gr.id_gr = gri.id_gr
         JOIN 
           purchase_order_item poi ON gri.id_po_item = poi.id_po_item
+        WHERE (gr.gr_date = $1 OR $1::DATE IS NULL)
+        AND (po.po_date = $2 OR $2::DATE IS NULL)
+        AND (c.id_company LIKE COALESCE($3, '%'))
         GROUP BY 
           gr.id, po.id_po, gr.id_gr, po.po_date, gr.gr_date, c.id_company, c.company_name, v.id_vendor, v.vendor_name, po.grand_total, gr.grand_total, u.name, po.sub_total, po.ppn
         ORDER BY gr.gr_date DESC
-      `
+      `,
+      [gr_date, po_date, company + "%"]
     );
 
-    const items = await client.query(
-      `
-      SELECT 
-      `
-    );
     await client.query(TRANS.COMMIT);
     return result.rows;
   } catch (error) {
