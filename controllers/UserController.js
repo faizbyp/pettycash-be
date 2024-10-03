@@ -53,13 +53,24 @@ const handleRegisterUser = async (req, res) => {
   const email = req.body.email;
   const username = req.body.username;
   const password = await hashPassword(req.body.password);
+  let id_role;
+  switch (req.body.role) {
+    case "user":
+      id_role = "IaKgzAxkTeBRQlFVaVphGMa8etPpum37y56IeS9WBPE=";
+      break;
+    case "finance":
+      id_role = "VOSZYnFCfVdxm11N95Q9PtY8qVL+jrHzjYs6BAEQ8TA=";
+      break;
+    default:
+      id_role = "IaKgzAxkTeBRQlFVaVphGMa8etPpum37y56IeS9WBPE=";
+  }
   const payload = {
     name: req.body.name,
     username: username,
     password: password,
     email: email,
     id_user: uuidv4(),
-    id_role: "IaKgzAxkTeBRQlFVaVphGMa8etPpum37y56IeS9WBPE=",
+    id_role: id_role,
   };
   try {
     const result = await registerUser(payload);
