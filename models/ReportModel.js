@@ -1,6 +1,7 @@
 const db = require("../config/connection");
 const TRANS = require("../config/transaction");
 const { insertQuery } = require("../helper/queryBuilder");
+const ExcelJS = require("exceljs");
 
 const getComparisonReport = async () => {
   const client = await db.connect();
@@ -70,4 +71,80 @@ const getComparisonReport = async () => {
   }
 };
 
-module.exports = { getComparisonReport };
+const generateComparisonExcel = async () => {
+  try {
+    const rowData = await getComparisonReport();
+    const workbook = new ExcelJS.Workbook();
+
+    let masterSheet = workbook.addWorksheet("Master");
+    masterSheet.columns = [
+      { header: "ID Confirmation", key: "id_gr", width: 25 },
+      { header: "ID Plan", key: "id_po", width: 15 },
+      { header: "User", key: "user_name", width: 20 },
+      { header: "Confirmation Date", key: "gr_date", width: 20 },
+      { header: "Plan Date", key: "po_date", width: 20 },
+      { header: "Company", key: "company_name", width: 25 },
+      { header: "Vendor", key: "vendor_name", width: 25 },
+      { header: "Confirmation Subtotal", key: "gr_sub", width: 15 },
+      { header: "Plan Subtotal", key: "po_sub", width: 15 },
+      { header: "Confirmation PPN", key: "gr_ppn", width: 15 },
+      { header: "Plan PPN", key: "po_ppn", width: 15 },
+      { header: "Confirmation Total", key: "gr_total", width: 20 },
+      { header: "Plan Total", key: "po_total", width: 20 },
+    ];
+    masterSheet.getRow(1).font = { bold: true };
+
+    let detailSheet = workbook.addWorksheet("Details (Item)");
+    detailSheet.columns = [
+      { header: "ID Confirmation", key: "id_gr", width: 15 },
+      { header: "Item", key: "description", width: 25 },
+      { header: "Confirmation Qty", key: "gr_qty", width: 20 },
+      { header: "Plan Qty", key: "po_qty", width: 20 },
+      { header: "UOM", key: "uom", width: 10 },
+      { header: "Confirmation Unit Price", key: "gr_unit_price", width: 20 },
+      { header: "Plan Unit Price", key: "po_unit_price", width: 20 },
+      { header: "Confirmation Amount", key: "gr_amount", width: 15 },
+      { header: "Plan Amount", key: "po_amount", width: 15 },
+    ];
+    detailSheet.getRow(1).font = { bold: true };
+
+    rowData.forEach((row) => {
+      masterSheet.addRow({
+        id_gr: row.id_gr,
+        id_po: row.id_po,
+        gr_date: row.gr_date,
+        po_date: row.po_date,
+        user_name: row.user_name,
+        company_name: row.company_name,
+        vendor_name: row.vendor_name,
+        gr_sub: row.gr_sub,
+        po_sub: row.po_sub,
+        gr_ppn: row.gr_ppn,
+        po_ppn: row.po_ppn,
+        gr_total: row.gr_total,
+        po_total: row.po_total,
+      });
+
+      row.items.forEach((item) => {
+        detailSheet.addRow({
+          id_gr: row.id_gr,
+          description: item.description,
+          gr_qty: item.gr_qty,
+          po_qty: item.po_qty,
+          uom: item.uom,
+          gr_unit_price: item.gr_unit_price,
+          po_unit_price: item.po_unit_price,
+          gr_amount: item.gr_amount,
+          po_amount: item.po_amount,
+        });
+      });
+    });
+
+    return workbook;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+module.exports = { getComparisonReport, generateComparisonExcel };
