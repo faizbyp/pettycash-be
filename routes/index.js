@@ -6,6 +6,7 @@ const UOM = require("./UOM");
 const PO = require("./PO");
 const GR = require("./GR");
 const User = require("./User");
+const Report = require("./Report");
 // import controllers here
 const Example = require("../controllers/ExampleController");
 
@@ -17,6 +18,7 @@ router.use("/api/uom", UOM);
 router.use("/api/po", PO);
 router.use("/api/gr", GR);
 router.use("/api/user", User);
+router.use("/api/report", Report);
 
 router.use("/api", (req, res) => {
   res.status(200).send({
