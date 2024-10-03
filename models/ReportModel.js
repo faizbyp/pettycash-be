@@ -56,7 +56,7 @@ const getComparisonReport = async (gr_date, po_date, company) => {
           gr.id, po.id_po, gr.id_gr, po.po_date, gr.gr_date, c.id_company, c.company_name, v.id_vendor, v.vendor_name, po.grand_total, gr.grand_total, u.name, po.sub_total, po.ppn
         ORDER BY gr.gr_date DESC
       `,
-      [gr_date, po_date, company + "%"]
+      [gr_date, po_date, company]
     );
 
     await client.query(TRANS.COMMIT);

@@ -9,7 +9,7 @@ const { getComparisonReport, generateComparisonExcel } = require("../models/Repo
 const handleGetComparisonReport = async (req, res) => {
   const po_date = req.query.po_date || null;
   const gr_date = req.query.gr_date || null;
-  const company = req.query.company || null;
+  const company = req.query.company + "%" || null;
 
   try {
     let result = await getComparisonReport(po_date, gr_date, company);
@@ -27,7 +27,7 @@ const handleGetComparisonReport = async (req, res) => {
 const handleGenerateComparison = async (req, res) => {
   const po_date = req.query.po_date || null;
   const gr_date = req.query.gr_date || null;
-  const company = req.query.company || null;
+  const company = req.query.company + "%" || null;
 
   try {
     const data = await generateComparisonExcel();
