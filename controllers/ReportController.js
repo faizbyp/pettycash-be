@@ -7,12 +7,12 @@ const { getPOById, updatePOCompletion } = require("../models/POModel");
 const { getComparisonReport, generateComparisonExcel } = require("../models/ReportModel");
 
 const handleGetComparisonReport = async (req, res) => {
-  const po_date = req.query.po_date || null;
   const gr_date = req.query.gr_date || null;
+  const po_date = req.query.po_date || null;
   const company = req.query.company + "%" || null;
 
   try {
-    let result = await getComparisonReport(po_date, gr_date, company);
+    let result = await getComparisonReport(gr_date, po_date, company);
     res.status(200).send({
       message: `Success get comparison`,
       data: result,
@@ -30,7 +30,7 @@ const handleGenerateComparison = async (req, res) => {
   const company = req.query.company + "%" || null;
 
   try {
-    const data = await generateComparisonExcel();
+    const data = await generateComparisonExcel(po_date, gr_date, company);
 
     res.setHeader(
       "Content-Type",

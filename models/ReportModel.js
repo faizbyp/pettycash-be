@@ -70,9 +70,9 @@ const getComparisonReport = async (gr_date, po_date, company) => {
   }
 };
 
-const generateComparisonExcel = async () => {
+const generateComparisonExcel = async (gr_date, po_date, company) => {
   try {
-    const rowData = await getComparisonReport();
+    const rowData = await getComparisonReport(gr_date, po_date, company);
     const workbook = new ExcelJS.Workbook();
 
     let masterSheet = workbook.addWorksheet("Master");
