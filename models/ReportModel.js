@@ -3,7 +3,13 @@ const TRANS = require("../config/transaction");
 const { insertQuery } = require("../helper/queryBuilder");
 const ExcelJS = require("exceljs");
 
-const getComparisonReport = async (gr_date, po_date, company) => {
+const getComparisonReport = async (
+  gr_start_date,
+  gr_end_date,
+  po_start_date,
+  po_end_date,
+  company
+) => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
@@ -49,14 +55,14 @@ const getComparisonReport = async (gr_date, po_date, company) => {
           goods_receipt_item gri ON gr.id_gr = gri.id_gr
         JOIN 
           purchase_order_item poi ON gri.id_po_item = poi.id_po_item
-        WHERE (gr.gr_date = $1 OR $1::DATE IS NULL)
-        AND (po.po_date = $2 OR $2::DATE IS NULL)
-        AND (c.id_company LIKE COALESCE($3, '%'))
+        WHERE ((gr.gr_date >= $1 OR $1::DATE IS NULL) AND (gr.gr_date <= $2 OR $2::DATE IS NULL))
+        AND ((po.po_date >= $3 OR $3::DATE IS NULL) AND (po.po_date <= $4 OR $4::DATE IS NULL))
+        AND (c.id_company LIKE COALESCE($5, '%'))
         GROUP BY 
           gr.id, po.id_po, gr.id_gr, po.po_date, gr.gr_date, c.id_company, c.company_name, v.id_vendor, v.vendor_name, po.grand_total, gr.grand_total, u.name, po.sub_total, po.ppn
         ORDER BY gr.gr_date DESC
       `,
-      [gr_date, po_date, company]
+      [gr_start_date, gr_end_date, po_start_date, po_end_date, company]
     );
     console.log(result.rows);
 
@@ -71,9 +77,21 @@ const getComparisonReport = async (gr_date, po_date, company) => {
   }
 };
 
-const generateComparisonExcel = async (gr_date, po_date, company) => {
+const generateComparisonExcel = async (
+  gr_start_date,
+  gr_end_date,
+  po_start_date,
+  po_end_date,
+  company
+) => {
   try {
-    const rowData = await getComparisonReport(gr_date, po_date, company);
+    const rowData = await getComparisonReport(
+      gr_start_date,
+      gr_end_date,
+      po_start_date,
+      po_end_date,
+      company
+    );
     const workbook = new ExcelJS.Workbook();
 
     let masterSheet = workbook.addWorksheet("Master");
