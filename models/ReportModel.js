@@ -58,6 +58,7 @@ const getComparisonReport = async (gr_date, po_date, company) => {
       `,
       [gr_date, po_date, company]
     );
+    console.log(result.rows);
 
     await client.query(TRANS.COMMIT);
     return result.rows;
