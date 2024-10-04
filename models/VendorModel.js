@@ -2,6 +2,27 @@ const db = require("../config/connection");
 const TRANS = require("../config/transaction");
 const { insertQuery, updateQuery } = require("../helper/queryBuilder");
 
+const getAllVendor = async (is_active) => {
+  const client = await db.connect();
+  try {
+    await client.query(TRANS.BEGIN);
+    const result = await client.query(
+      `
+      SELECT * FROM mst_vendor
+      WHERE (is_active = $1 OR $1::BOOL IS NULL);
+      `,
+      [is_active]
+    );
+    await client.query(TRANS.COMMIT);
+    return result.rows;
+  } catch (error) {
+    console.log(error);
+    await client.query(TRANS.ROLLBACK);
+  } finally {
+    client.release();
+  }
+};
+
 const getVendorById = async (id) => {
   const client = await db.connect();
   try {
@@ -62,6 +83,7 @@ const editVendor = async (payload, id) => {
 };
 
 module.exports = {
+  getAllVendor,
   getVendorById,
   addVendor,
   editVendor,

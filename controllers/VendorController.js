@@ -1,9 +1,10 @@
 const { getAllFromTable } = require("../models/StandardQuery");
-const { getVendorById, addVendor, editVendor } = require("../models/VendorModel");
+const { getVendorById, addVendor, editVendor, getAllVendor } = require("../models/VendorModel");
 
 const handleGetAllVendor = async (req, res) => {
+  const is_active = req.query.is_active || null;
   try {
-    let result = await getAllFromTable("mst_vendor");
+    let result = await getAllVendor(is_active);
     res.status(200).send({
       message: `Success get vendors`,
       data: result,
