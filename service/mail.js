@@ -1,4 +1,5 @@
 const mailer = require("nodemailer");
+const emailTemplate = require("../helper/emailTemplate");
 
 class Mailer {
   constructor() {
@@ -20,11 +21,20 @@ class Mailer {
   }
 
   async otpVerifyNew(otpCode, emailTarget) {
+    const html = emailTemplate(`
+      <h1>OTP Verification</h1>
+      <p>This is your OTP Code: <b>${otpCode}</b>
+      <br />
+      This code will expired after 5 minute. Please insert the code before expiry time.</p>
+      <p>Ignore this email if you didn't register to KPN Petty Cash System.</p>
+      `);
+
     const setup = {
       from: process.env.SMTP_USERNAME,
       to: emailTarget,
       subject: "Petty Cash KPN - OTP New User",
-      text: `This is your OTP Code: ${otpCode}, this code will expired after 5 minute. Please insert before expiry time`,
+      html: html,
+      text: `This is your OTP Code: ${otpCode}, this code will expired after 5 minute. Please insert the code before expiry time.`,
     };
     try {
       await this.tp.sendMail(setup);
