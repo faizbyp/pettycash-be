@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require("uuid");
 const { parseFormUpload } = require("../helper/fileUpload");
-const { postGR, getGRByUser, getGRById } = require("../models/GRModel");
+const { postGR, getGRByUser, getGRById, GRApproval, getAllGR } = require("../models/GRModel");
 const { postGRItem } = require("../models/GRItemModel");
 const { getRemainingItem } = require("../models/POItemModel");
 const { getPOById, updatePOCompletion } = require("../models/POModel");
@@ -112,10 +112,50 @@ const handleGetRemainingItem = async (req, res) => {
   }
 };
 
+const handleGetAllGR = async (req, res) => {
+  try {
+    const result = await getAllGR();
+    res.status(200).send({
+      message: `Success get all GR`,
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: error.message,
+    });
+  }
+};
+
+const handleGRApproval = async (req, res) => {
+  let payload = req.body;
+  const id_gr = decodeURIComponent(req.params.id_gr);
+  try {
+    if (!payload.id_user || !payload.status || !payload.approval_date || !id_gr) {
+      throw new Error("Bad Request");
+    }
+    const result = await GRApproval(payload, id_gr);
+    res.status(200).send({
+      message: `GR ${id_gr} ${payload.status}`,
+    });
+  } catch (error) {
+    if (error.message === "Bad Request") {
+      res.status(400).send({
+        message: error.message,
+      });
+    } else {
+      res.status(500).send({
+        message: error.message,
+      });
+    }
+  }
+};
+
 module.exports = {
   handlePostGR,
   handleGetGRByUser,
   handleGetRemainingItem,
   handleGetPOForGR,
   handleGetGRById,
+  handleGRApproval,
+  handleGetAllGR,
 };

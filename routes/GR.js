@@ -5,10 +5,14 @@ const {
   handleGetRemainingItem,
   handleGetPOForGR,
   handleGetGRById,
+  handleGRApproval,
+  handleGetAllGR,
 } = require("../controllers/GRController");
 const router = express.Router();
 
 router.post("/", handlePostGR);
+router.get("/", handleGetAllGR);
+router.patch("/approval/:id_gr", handleGRApproval);
 router.get("/user/:id_user", handleGetGRByUser);
 router.get("/remaining", handleGetRemainingItem);
 router.get("/po/:id_po", handleGetPOForGR);

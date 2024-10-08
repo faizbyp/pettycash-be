@@ -34,7 +34,8 @@ const getGRByUser = async (id_user) => {
         po.po_date,
         gr.grand_total,
         c.company_name,
-        v.vendor_name
+        v.vendor_name,
+        gr.status
       FROM goods_receipt gr
       JOIN purchase_order po ON gr.id_po = po.id_po
       JOIN mst_company c ON po.id_company = c.id_company
@@ -110,4 +111,71 @@ const getGRById = async (id_gr) => {
   }
 };
 
-module.exports = { postGR, getGRByUser, getGRById };
+const getAllGR = async () => {
+  const client = await db.connect();
+  try {
+    await client.query(TRANS.BEGIN);
+    const result = await client.query(
+      `
+      SELECT 
+        gr.id,
+        gr.id_po,
+        gr.id_gr,
+        gr.gr_date,
+        po.po_date,
+        gr.grand_total,
+        c.company_name,
+        v.vendor_name,
+        gr.status,
+        u.name AS user_name
+      FROM goods_receipt gr
+      JOIN purchase_order po ON gr.id_po = po.id_po
+      JOIN mst_company c ON po.id_company = c.id_company
+      JOIN mst_vendor v ON po.id_vendor = v.id_vendor
+      JOIN mst_user u ON po.id_user = u.id_user
+      ORDER BY gr_date DESC
+      `
+    );
+    await client.query(TRANS.COMMIT);
+    return result.rows;
+  } catch (error) {
+    console.log(error);
+    await client.query(TRANS.ROLLBACK);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+const GRApproval = async (payload, id_gr) => {
+  const client = await db.connect();
+  try {
+    await client.query(TRANS.BEGIN);
+    let result = null;
+    if (payload.status === "approved") {
+      result = await client.query(
+        `UPDATE goods_receipt
+        SET status = $1, approval_by = $2, approval_date = $3
+        WHERE id_gr = $4`,
+        [payload.status, payload.id_user, payload.approval_date, id_gr]
+      );
+    } else if (payload.status === "rejected") {
+      result = await client.query(
+        `UPDATE goods_receipt
+        SET status = $1, approval_by = $2, approval_date = $3, reject_notes = $4
+        WHERE id_gr = $5`,
+        [payload.status, payload.id_user, payload.approval_date, payload.reject_notes, id_gr]
+      );
+    }
+    await client.query(TRANS.COMMIT);
+    return result.rowCount;
+  } catch (error) {
+    console.log(error);
+    await client.query(TRANS.ROLLBACK);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+module.exports = { postGR, getGRByUser, getGRById, GRApproval, getAllGR };
