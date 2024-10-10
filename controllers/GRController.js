@@ -1,4 +1,3 @@
-const { v4: uuidv4 } = require("uuid");
 const { parseFormUpload } = require("../helper/fileUpload");
 const { postGR, getGRByUser, getGRById, GRApproval, getAllGR } = require("../models/GRModel");
 const { postGRItem } = require("../models/GRItemModel");
@@ -40,25 +39,12 @@ const handlePostGR = async (req, res) => {
       invoice_file: filename,
     };
     console.log("payload", payload);
-    let result = await postGR(payload);
-    // GR item payload
-    itemPayload = itemPayload.map((item) => {
-      delete item.description;
-      delete item.id_po;
-      delete item.uom;
-      return {
-        ...item,
-        id_gr_item: uuidv4(),
-        id_gr: result,
-      };
-    });
-    console.log("item payload", itemPayload);
-    await postGRItem(itemPayload);
+    let result = await postGR(payload, itemPayload);
 
     await updatePOCompletion(payload.id_po);
 
     res.status(200).send({
-      message: "Success create Order Confirmation",
+      message: `Success create Order Confirmation: ${payload.id_gr}`,
       // id_po: result,
     });
   } catch (error) {

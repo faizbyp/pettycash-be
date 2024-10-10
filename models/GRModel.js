@@ -1,16 +1,43 @@
 const db = require("../config/connection");
 const TRANS = require("../config/transaction");
 const { insertQuery } = require("../helper/queryBuilder");
+const { updatePOItemCompletion } = require("./POItemModel");
+const { v4: uuidv4 } = require("uuid");
 
-const postGR = async (payload) => {
+const postGR = async (payload, itemPayload) => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
+    // GR
     const [query, value] = insertQuery("goods_receipt", payload, "id_gr");
     console.log(query);
     const result = await client.query(query, value);
+    const id_gr = result.rows[0].id_gr;
+
+    // GR ITEM
+    itemPayload = itemPayload.map((item) => {
+      delete item.description;
+      delete item.id_po;
+      delete item.uom;
+      return {
+        ...item,
+        id_gr_item: uuidv4(),
+        id_gr: id_gr,
+      };
+    });
+    console.log("item payload", itemPayload);
+
+    const itemInsert = itemPayload.map(({ is_complete, ...item }) => item);
+    const [itemQuery, itemValue] = insertQuery("goods_receipt_item", itemInsert);
+    console.log(itemQuery);
+    const itemResult = await client.query(itemQuery, itemValue);
+    const updateCompleteId = itemPayload
+      .filter((item) => item.is_complete === true)
+      .map((item) => item.id_po_item);
+    await updatePOItemCompletion(client, updateCompleteId);
+
     await client.query(TRANS.COMMIT);
-    return result.rows[0].id_gr;
+    return id_gr;
   } catch (error) {
     console.log(error);
     await client.query(TRANS.ROLLBACK);
