@@ -8,7 +8,7 @@ const {
 const router = express.Router();
 
 router.post("/register", handleRegisterUser);
-router.post("/verify-otp", handleVerifyUser);
+router.get("/verify/:id_user", handleVerifyUser);
 router.post("/login", handleLoginUser);
 router.post("/refresh", refreshAccessToken);
 

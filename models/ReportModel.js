@@ -32,6 +32,7 @@ const getComparisonReport = async (
         po.grand_total AS po_total,
         gr.grand_total AS gr_total,
         u.name AS user_name,
+        gr.invoice_num,
         JSON_AGG(
           JSON_BUILD_OBJECT(
             'id_po_item', gri.id_po_item,
@@ -64,7 +65,6 @@ const getComparisonReport = async (
       `,
       [gr_start_date, gr_end_date, po_start_date, po_end_date, company]
     );
-    console.log(result.rows);
 
     await client.query(TRANS.COMMIT);
     return result.rows;
@@ -103,10 +103,11 @@ const generateComparisonExcel = async (
       { header: "Plan Date", key: "po_date", width: 20 },
       { header: "Company", key: "company_name", width: 25 },
       { header: "Vendor", key: "vendor_name", width: 25 },
-      { header: "Confirmation Subtotal", key: "gr_sub", width: 15 },
-      { header: "Plan Subtotal", key: "po_sub", width: 15 },
-      { header: "Confirmation PPN", key: "gr_ppn", width: 15 },
-      { header: "Plan PPN", key: "po_ppn", width: 15 },
+      { header: "Invoice No.", key: "invoice_num", width: 20 },
+      { header: "Confirmation Subtotal", key: "gr_sub", width: 25 },
+      { header: "Plan Subtotal", key: "po_sub", width: 25 },
+      { header: "Confirmation PPN", key: "gr_ppn", width: 20 },
+      { header: "Plan PPN", key: "po_ppn", width: 20 },
       { header: "Confirmation Total", key: "gr_total", width: 20 },
       { header: "Plan Total", key: "po_total", width: 20 },
     ];
@@ -114,15 +115,15 @@ const generateComparisonExcel = async (
 
     let detailSheet = workbook.addWorksheet("Details (Item)");
     detailSheet.columns = [
-      { header: "ID Confirmation", key: "id_gr", width: 15 },
+      { header: "ID Confirmation", key: "id_gr", width: 25 },
       { header: "Item", key: "description", width: 25 },
       { header: "Confirmation Qty", key: "gr_qty", width: 20 },
       { header: "Plan Qty", key: "po_qty", width: 20 },
       { header: "UOM", key: "uom", width: 10 },
-      { header: "Confirmation Unit Price", key: "gr_unit_price", width: 20 },
-      { header: "Plan Unit Price", key: "po_unit_price", width: 20 },
-      { header: "Confirmation Amount", key: "gr_amount", width: 15 },
-      { header: "Plan Amount", key: "po_amount", width: 15 },
+      { header: "Confirmation Unit Price", key: "gr_unit_price", width: 25 },
+      { header: "Plan Unit Price", key: "po_unit_price", width: 25 },
+      { header: "Confirmation Amount", key: "gr_amount", width: 20 },
+      { header: "Plan Amount", key: "po_amount", width: 20 },
     ];
     detailSheet.getRow(1).font = { bold: true };
 
@@ -135,6 +136,7 @@ const generateComparisonExcel = async (
         user_name: row.user_name,
         company_name: row.company_name,
         vendor_name: row.vendor_name,
+        invoice_num: row.invoice_num,
         gr_sub: row.gr_sub,
         po_sub: row.po_sub,
         gr_ppn: row.gr_ppn,

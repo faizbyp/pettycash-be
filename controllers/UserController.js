@@ -2,6 +2,7 @@ const { v4: uuidv4 } = require("uuid");
 const { hashPassword } = require("../helper/auth/password");
 const { registerUser, verifyUser, loginUser } = require("../models/UserModel");
 const jwt = require("jsonwebtoken");
+const emailTemplate = require("../helper/emailTemplate");
 
 const handleLoginUser = async (req, res) => {
   const emailOrUname = req.body.username;
@@ -64,6 +65,8 @@ const handleRegisterUser = async (req, res) => {
     default:
       id_role = "IaKgzAxkTeBRQlFVaVphGMa8etPpum37y56IeS9WBPE=";
   }
+
+  const role = req.body.role;
   const payload = {
     name: req.body.name,
     username: username,
@@ -72,10 +75,11 @@ const handleRegisterUser = async (req, res) => {
     id_user: uuidv4(),
     id_role: id_role,
   };
+
   try {
-    const result = await registerUser(payload);
+    const result = await registerUser(payload, role);
     res.status(200).send({
-      message: "User registered, please verify OTP",
+      message: "User registered, please wait for verification",
     });
   } catch (error) {
     res.status(500).send({
@@ -85,13 +89,26 @@ const handleRegisterUser = async (req, res) => {
 };
 
 const handleVerifyUser = async (req, res) => {
-  const email = req.body.email;
-  const otp = req.body.otp;
+  const id_user = req.params.id_user;
+  const verify = req.query.verify === "true" ? true : false;
+  const token = req.query.token;
+
   try {
-    const result = await verifyUser(email, otp);
-    res.status(200).send({
-      message: "User registered. Welcome to Petty Cash",
-    });
+    if (!token) throw new Error("Token Not Provided");
+    const result = await verifyUser(id_user, verify, token);
+
+    const verifyRes = emailTemplate(`
+      <h1>User Verified</h1>
+      <p>You can close this tab.</p>
+    `);
+
+    const rejectRes = emailTemplate(`
+      <h1>User Rejected</h1>
+      <p>You can close this tab.</p>
+    `);
+
+    res.set("Content-Type", "text/html");
+    res.status(200).send(Buffer.from(verify ? verifyRes : rejectRes));
   } catch (error) {
     res.status(500).send({
       message: error.message,
