@@ -52,6 +52,32 @@ function emailTemplate(slot) {
           font-size: 14px;
           padding-bottom: 20px;
         }
+
+        .btn {
+          display: inline-block;
+          padding: 10px 20px;
+          margin: 10px 0;
+          margin-right: 20px;
+          font-size: 16px;
+          text-align: center;
+          text-decoration: none;
+          border-radius: 5px;
+        }
+
+        .btn-primary {
+          background-color: #0297b5;
+          color: #ffffff !important;
+        }
+
+        .btn-secondary {
+          background-color: #6c757d;
+          color: #ffffff !important;
+        }
+
+        .btn-danger {
+          background-color: #dc3545;
+          color: #ffffff !important;
+        }
       </style>
     </head>
     <body>
@@ -63,7 +89,7 @@ function emailTemplate(slot) {
           ${slot}
         </div>
         <div class="footer">
-          <p>&copy; 2024 Your Company. All Rights Reserved.</p>
+          <p>&copy; 2024 KPN Corp. All Rights Reserved.</p>
           <a href="https://kpn-corp.com/contact-us" style="color: #343a40">Contact Us</a>
         </div>
       </div>
