@@ -59,6 +59,7 @@ const getComparisonReport = async (
         WHERE ((gr.gr_date >= $1 OR $1::DATE IS NULL) AND (gr.gr_date <= $2 OR $2::DATE IS NULL))
         AND ((po.po_date >= $3 OR $3::DATE IS NULL) AND (po.po_date <= $4 OR $4::DATE IS NULL))
         AND (c.id_company LIKE COALESCE($5, '%'))
+        AND gr.status = 'approved'
         GROUP BY 
           gr.id, po.id_po, gr.id_gr, po.po_date, gr.gr_date, c.id_company, c.company_name, v.id_vendor, v.vendor_name, po.grand_total, gr.grand_total, u.name, po.sub_total, po.ppn
         ORDER BY gr.gr_date DESC
