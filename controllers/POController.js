@@ -1,4 +1,3 @@
-const { postPOItem } = require("../models/POItemModel");
 const { postPO, getPOByUser, getPOById, getAllPO, POApproval } = require("../models/POModel");
 const { v4: uuidv4 } = require("uuid");
 
@@ -14,15 +13,7 @@ const handlePostPO = async (req, res) => {
       ppn: payload.ppn ? 0.11 : 0,
     };
     console.log(payload);
-    let result = await postPO(payload);
-    // PO item payload
-    itemPayload = itemPayload.map((item) => ({
-      ...item,
-      id_po_item: uuidv4(),
-      id_po: result,
-    }));
-    console.log(itemPayload);
-    await postPOItem(itemPayload);
+    let result = await postPO(payload, itemPayload);
 
     res.status(200).send({
       message: "Success add PO",

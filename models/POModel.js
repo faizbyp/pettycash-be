@@ -1,16 +1,32 @@
 const db = require("../config/connection");
 const TRANS = require("../config/transaction");
 const { insertQuery } = require("../helper/queryBuilder");
+const { postPOItem } = require("./POItemModel");
+const { v4: uuidv4 } = require("uuid");
 
-const postPO = async (payload) => {
+const postPO = async (payload, itemPayload) => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
+
+    // PO
     const [query, value] = insertQuery("purchase_order", payload, "id_po");
     console.log(query);
     const result = await client.query(query, value);
+    const id_po = result.rows[0].id_po;
+
+    // PO ITEM
+    itemPayload = itemPayload.map((item) => ({
+      ...item,
+      id_po_item: uuidv4(),
+      id_po: id_po,
+    }));
+    const [itemQuery, itemValue] = insertQuery("purchase_order_item", itemPayload);
+    console.log(itemQuery, itemPayload);
+    const itemResult = await client.query(itemQuery, itemValue);
+
     await client.query(TRANS.COMMIT);
-    return result.rows[0].id_po;
+    return id_po;
   } catch (error) {
     console.log(error);
     await client.query(TRANS.ROLLBACK);
