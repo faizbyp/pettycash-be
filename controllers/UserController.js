@@ -91,9 +91,11 @@ const handleRegisterUser = async (req, res) => {
 const handleVerifyUser = async (req, res) => {
   const id_user = req.params.id_user;
   const verify = req.query.verify === "true" ? true : false;
+  const token = req.query.token;
 
   try {
-    const result = await verifyUser(id_user, verify);
+    if (!token) throw new Error("Token Not Provided");
+    const result = await verifyUser(id_user, verify, token);
 
     const verifyRes = emailTemplate(`
       <h1>User Verified</h1>

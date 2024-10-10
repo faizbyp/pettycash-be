@@ -1,6 +1,6 @@
 const db = require("../config/connection");
 const TRANS = require("../config/transaction");
-const { createOTP, validateOTP } = require("../helper/auth/OTP");
+const { createOTP, validateOTP, validateToken } = require("../helper/auth/OTP");
 const { validatePassword } = require("../helper/auth/password");
 const { insertQuery, deleteQuery } = require("../helper/queryBuilder");
 const Emailer = require("../service/mail");
@@ -87,31 +87,27 @@ const registerUser = async (payload, role) => {
       throw new Error("User already registered, please wait for verification");
     }
 
+    // Create OTP
+    const [otpCode, otpHashed, validUntil] = createOTP();
+    const payloadOtp = {
+      email: payload.email,
+      otp_code: otpHashed,
+      valid_until: null,
+    };
+    const [cleanQuery, cleanValue] = deleteQuery("otp_trans", { email: payload.email });
+    const [OTPQuery, OTPValue] = insertQuery("otp_trans", payloadOtp);
+    await client.query(cleanQuery, cleanValue);
+    await client.query(OTPQuery, OTPValue);
+
     // Approve account
     const Email = new Emailer();
-    const result = await Email.verifyUser(payload, role);
+    const result = await Email.verifyUser(payload, role, otpCode);
     console.log(result);
     // if (role === "user") {
 
     // } else if (role === "finance") {
 
     // }
-
-    // Send OTP
-    // const [otpCode, otpHashed, validUntil] = createOTP();
-    // const payloadOtp = {
-    //   email: payload.email,
-    //   otp_code: otpHashed,
-    //   valid_until: validUntil,
-    // };
-    // const [cleanQuery, cleanValue] = deleteQuery("otp_trans", { email: payload.email });
-    // const [OTPQuery, OTPValue] = insertQuery("otp_trans", payloadOtp);
-    // await client.query(cleanQuery, cleanValue);
-    // await client.query(OTPQuery, OTPValue);
-
-    // const Email = new Emailer();
-    // const result = await Email.otpVerifyNew(otpCode, payload.email);
-    // console.log(result);
 
     await client.query(TRANS.COMMIT);
     return result;
@@ -124,7 +120,7 @@ const registerUser = async (payload, role) => {
   }
 };
 
-const verifyUser = async (id_user, verify) => {
+const verifyUser = async (id_user, verify, token) => {
   const client = await db.connect();
   console.log(verify);
   try {
@@ -137,10 +133,11 @@ const verifyUser = async (id_user, verify) => {
     if (!userData) throw new Error("User not found or already verified");
     delete userData.id;
 
+    const validate = await validateToken(token, userData.email);
+
     if (verify) {
       const [insertUser, userValue] = insertQuery("mst_user", userData);
       const [cleanQuery, cleanValue] = deleteQuery("mst_user_temp", { id_user: id_user });
-
       const [insert, clean] = await Promise.all([
         client.query(insertUser, userValue),
         client.query(cleanQuery, cleanValue),
@@ -149,6 +146,9 @@ const verifyUser = async (id_user, verify) => {
       const [cleanQuery, cleanValue] = deleteQuery("mst_user_temp", { id_user: id_user });
       const clean = await client.query(cleanQuery, cleanValue);
     }
+
+    const [cleanOtp, otpValue] = deleteQuery("otp_trans", { email: userData.email });
+    await client.query(cleanOtp, otpValue);
 
     // Email to user
     const Email = new Emailer();
@@ -165,36 +165,8 @@ const verifyUser = async (id_user, verify) => {
   }
 };
 
-const rejectUser = async (id_user) => {
-  const client = await db.connect();
-  try {
-    await client.query(TRANS.BEGIN);
-
-    const tempUser = await client.query("SELECT * FROM mst_user_temp where id_user = $1", [
-      id_user,
-    ]);
-    const userData = tempUser.rows[0];
-    delete userData.id;
-    const [cleanQuery, cleanValue] = deleteQuery("mst_user_temp", { id_user: id_user });
-    let promises = [client.query(insertUser, userValue), client.query(cleanQuery, cleanValue)];
-    const result = Promise.all(promises);
-    console.log(result);
-
-    // Email to user
-
-    await client.query(TRANS.COMMIT);
-  } catch (error) {
-    console.error(error);
-    await client.query(TRANS.ROLLBACK);
-    throw error;
-  } finally {
-    client.release();
-  }
-};
-
 module.exports = {
   registerUser,
   verifyUser,
-  rejectUser,
   loginUser,
 };

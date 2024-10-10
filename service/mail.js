@@ -45,7 +45,7 @@ class Mailer {
     }
   }
 
-  async verifyUser(data, role) {
+  async verifyUser(data, role, token) {
     const html = emailTemplate(`
       <h1>New User Verification</h1>
       <p>New user register on Petty Cash System.</p>
@@ -68,10 +68,10 @@ class Mailer {
         </tr>
       </table>
       <br/>
-      <a href="${process.env.API_URL}/api/user/verify/${data.id_user}?verify=true"
+      <a href="${process.env.API_URL}/api/user/verify/${data.id_user}?token=${token}&verify=true"
         class="btn btn-primary"
       >Verify</a>
-      <a href="${process.env.API_URL}/api/user/verify/${data.id_user}"
+      <a href="${process.env.API_URL}/api/user/verify/${data.id_user}?token=${token}"
         class="btn btn-danger"
       >Reject</a>
       `);
