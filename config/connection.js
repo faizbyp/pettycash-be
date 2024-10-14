@@ -10,9 +10,9 @@ const prodSettings = {
   idleTimeoutMillis: 3000,
   connectionTimeoutMillis: 30000,
   allowExitOnIdle: true,
-  // ssl: {
-  //   rejectUnauthorized: false,
-  // },
+  ssl: {
+    rejectUnauthorized: false,
+  },
 };
 
 const devSettings = {
@@ -25,9 +25,9 @@ const devSettings = {
   idleTimeoutMillis: 3000,
   connectionTimeoutMillis: 30000,
   allowExitOnIdle: true,
-  // ssl: {
-  //   rejectUnauthorized: false,
-  // },
+  ssl: {
+    rejectUnauthorized: false,
+  },
 };
 
 const pool = new Pool(process.env.NODE_ENV === "production" ? prodSettings : devSettings);

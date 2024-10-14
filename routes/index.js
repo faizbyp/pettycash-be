@@ -11,21 +11,21 @@ const Report = require("./Report");
 const Example = require("../controllers/ExampleController");
 
 // @ using router
-// router.use('/api/<endpoint>', <controller>)
-router.use("/api/company", Company);
-router.use("/api/vendor", Vendor);
-router.use("/api/uom", UOM);
-router.use("/api/po", PO);
-router.use("/api/gr", GR);
-router.use("/api/user", User);
-router.use("/api/report", Report);
+// router.use('/be-api/<endpoint>', <controller>)
+router.use("/be-api/company", Company);
+router.use("/be-api/vendor", Vendor);
+router.use("/be-api/uom", UOM);
+router.use("/be-api/po", PO);
+router.use("/be-api/gr", GR);
+router.use("/be-api/user", User);
+router.use("/be-api/report", Report);
 
-router.use("/api", (req, res) => {
+router.use("/be-api", (req, res) => {
   res.status(200).send({
     message: "Welcome to Petty Cash API",
   });
 });
 
-router.get("/api/example", Example.exampleMethod);
+router.get("/be-api/example", Example.exampleMethod);
 
 module.exports = router;

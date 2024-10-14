@@ -1,3 +1,6 @@
 node_modules
 .env.development
 .env.production
+.env.wb
+production.env
+development.env

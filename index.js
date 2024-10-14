@@ -1,5 +1,5 @@
 const dotenv = require("dotenv").config({
-  path: `./.env.${process.env.NODE_ENV}`,
+  path: `./${process.env.NODE_ENV}.env`,
 });
 const express = require("express");
 const os = require("os");
@@ -26,9 +26,9 @@ const corsOption = {
   exposedHeaders: ["set-cookie"],
 };
 
-app.use("/api/static", express.static("uploads")); // http://localhost:5001/static/invoice/filename.ext
+app.use("/be-api/static", express.static("uploads")); // http://localhost:5000/static/invoice/filename.ext
 app.use((req, res, next) => {
-  if (req.path.startsWith("/api/static")) {
+  if (req.path.startsWith("/be-api/static")) {
     return res.status(404).sendFile(path.join(__dirname, "public", "404-file.html"));
   }
   next();

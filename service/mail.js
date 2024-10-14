@@ -68,17 +68,17 @@ class Mailer {
         </tr>
       </table>
       <br/>
-      <a href="${process.env.API_URL}/api/user/verify/${data.id_user}?token=${token}&verify=true"
+      <a href="${process.env.API_URL}/user/verify/${data.id_user}?token=${token}&verify=true"
         class="btn btn-primary"
       >Verify</a>
-      <a href="${process.env.API_URL}/api/user/verify/${data.id_user}?token=${token}"
+      <a href="${process.env.API_URL}/user/verify/${data.id_user}?token=${token}"
         class="btn btn-danger"
       >Reject</a>
       `);
 
     const setup = {
       from: process.env.SMTP_USERNAME,
-      to: "faizbyp@gmail.com",
+      to: process.env.NODE_ENV === "production" ? "kurnia.halim@kpn-corp.com" : "faizbyp@gmail.com",
       subject: "Petty Cash KPN - New User Verification",
       html: html,
     };
