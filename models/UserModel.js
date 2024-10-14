@@ -1,8 +1,8 @@
 const db = require("../config/connection");
 const TRANS = require("../config/transaction");
 const { createOTP, validateOTP, validateToken } = require("../helper/auth/OTP");
-const { validatePassword } = require("../helper/auth/password");
-const { insertQuery, deleteQuery } = require("../helper/queryBuilder");
+const { validatePassword, hashPassword } = require("../helper/auth/password");
+const { insertQuery, deleteQuery, updateQuery } = require("../helper/queryBuilder");
 const Emailer = require("../service/mail");
 const jwt = require("jsonwebtoken");
 
@@ -165,8 +165,70 @@ const verifyUser = async (id_user, verify, token) => {
   }
 };
 
+const reqResetPassword = async (email) => {
+  const client = await db.connect();
+  try {
+    await client.query(TRANS.BEGIN);
+    const checkRegis = await client.query("SELECT * FROM mst_user where email = $1", [email]);
+    if (checkRegis.rows.length === 0) {
+      throw new Error("User not registered yet");
+    }
+    const [otpCode, encodedOTP, validUntil] = createOTP();
+    const payload = {
+      email: email,
+      otp_code: encodedOTP,
+      valid_until: validUntil,
+    };
+    const [cleanQuery, cleanValue] = deleteQuery("otp_trans", { email: email });
+    const cleanExist = await client.query(cleanQuery, cleanValue);
+    const [insertOtpQuery, insertOtpValue] = insertQuery("otp_trans", payload);
+    const insertOTP = await client.query(insertOtpQuery, insertOtpValue);
+    const Email = new Emailer();
+    const sendOtp = await Email.otpResetPass(otpCode, email);
+    console.log(sendOtp);
+    await client.query(TRANS.COMMIT);
+  } catch (error) {
+    await client.query(TRANS.ROLLBACK);
+    console.log(error);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+const resetPassword = async (newPass, email) => {
+  const client = await db.connect();
+  try {
+    await client.query(TRANS.BEGIN);
+    const checkUser = await client.query("SELECT * FROM mst_user WHERE email = $1", [email]);
+    if (checkUser.rows.length == 0) {
+      throw new Error("User not found");
+    }
+    const hashedNewPass = await hashPassword(newPass);
+    const payload = {
+      password: hashedNewPass,
+    };
+    const [updatePassQuery, updatePassValue] = updateQuery(
+      "mst_user",
+      payload,
+      { email: email },
+      "username"
+    );
+    const updatePass = await client.query(updatePassQuery, updatePassValue);
+    await client.query(TRANS.COMMIT);
+  } catch (error) {
+    await client.query(TRANS.ROLLBACK);
+    console.log(error);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   registerUser,
   verifyUser,
   loginUser,
+  reqResetPassword,
+  resetPassword,
 };

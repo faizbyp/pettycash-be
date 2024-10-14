@@ -1,8 +1,15 @@
 const { v4: uuidv4 } = require("uuid");
 const { hashPassword } = require("../helper/auth/password");
-const { registerUser, verifyUser, loginUser } = require("../models/UserModel");
+const {
+  registerUser,
+  verifyUser,
+  loginUser,
+  reqResetPassword,
+  resetPassword,
+} = require("../models/UserModel");
 const jwt = require("jsonwebtoken");
 const emailTemplate = require("../helper/emailTemplate");
+const { validateOTP } = require("../helper/auth/OTP");
 
 const handleLoginUser = async (req, res) => {
   const emailOrUname = req.body.username;
@@ -116,4 +123,82 @@ const handleVerifyUser = async (req, res) => {
   }
 };
 
-module.exports = { handleRegisterUser, handleVerifyUser, handleLoginUser, refreshAccessToken };
+const handleReqResetPassword = async (req, res) => {
+  const email = req.body.email;
+  if (!email) {
+    return res.status(400).send({
+      message: "Email is required",
+    });
+  }
+  try {
+    await reqResetPassword(email);
+    return res.status(200).send({
+      message: "OTP sent, please check your email address",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({
+      message: error.message,
+    });
+  }
+};
+
+const handleVerifyResetPassword = async (req, res) => {
+  const email = req.body.email;
+  const otpInput = req.body.otpInput;
+  if (!email || !otpInput) {
+    return res.status(400).send({
+      message: "Bad Request",
+    });
+  }
+  try {
+    const validate = await validateOTP(otpInput, email);
+    const sessionToken = jwt.sign({ email: email }, process.env.SECRETJWT, {
+      expiresIn: "5m",
+    });
+    res.cookie("resetpwdSess", sessionToken, {
+      httpOnly: true,
+      sameSite: false,
+      secure: true,
+    });
+    return res.status(200).send({
+      message: "OTP Verified",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({
+      message: error.message,
+    });
+  }
+};
+
+const handleResetPassword = async (req, res) => {
+  const session = req.cookies.resetpwdSess;
+  const newPass = req.body.newPass;
+  const email = req.body.email;
+  try {
+    const validateSession = jwt.verify(session, process.env.SECRETJWT);
+    await resetPassword(newPass, email);
+    return res.status(200).send({
+      message: "Password has reset",
+    });
+  } catch (error) {
+    if (error?.name == "TokenExpiredError") {
+      return res.status(403).send("Session Expired");
+    } else if (error?.name == "JsonWebTokenError") {
+      return res.status(403).send("Invalid Session");
+    } else {
+      return res.status(500).send(error.message);
+    }
+  }
+};
+
+module.exports = {
+  handleRegisterUser,
+  handleVerifyUser,
+  handleLoginUser,
+  refreshAccessToken,
+  handleReqResetPassword,
+  handleVerifyResetPassword,
+  handleResetPassword,
+};

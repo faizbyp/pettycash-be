@@ -39,7 +39,7 @@ const validateOTP = async (otpInput, email) => {
       await client.query(cleanOtp, otpValue);
       const [cleanTemp, tempValue] = deleteQuery("mst_user_temp", { email: email });
       await client.query(cleanTemp, tempValue);
-      throw new Error("OTP Expired: Please register again");
+      throw new Error("OTP Expired: Please request again");
     }
     const compareOTP = bcrypt.compareSync(otpInput, otpHashed);
     if (!compareOTP) {

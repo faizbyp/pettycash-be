@@ -122,6 +122,31 @@ class Mailer {
       throw error;
     }
   }
+
+  async otpResetPass(otpCode, emailTarget) {
+    const html = emailTemplate(`
+      <h1>Reset Password Request</h1>
+      <p>This is your OTP Code:</p>
+      <h2>${otpCode}</h2>
+      <p>This code will expired after 5 minute. Please insert the code before expiry time.</p>
+      <p>Ignore this email if you didn't request reset password to KPN Petty Cash System.</p>
+      `);
+
+    const setup = {
+      from: process.env.SMTP_USERNAME,
+      to: emailTarget,
+      subject: "Petty Cash KPN - Reset Password OTP",
+      html: html,
+      text: `This is your OTP Code: ${otpCode}, this code will expired after 5 minute. Please insert the code before expiry time.`,
+    };
+    try {
+      await this.tp.sendMail(setup);
+      return emailTarget;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 }
 
 module.exports = Mailer;
