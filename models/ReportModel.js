@@ -168,4 +168,29 @@ const generateComparisonExcel = async (
   }
 };
 
+const reportChart = async (id_user) => {
+  const client = await db.connect();
+  try {
+    await client.query(TRANS.BEGIN);
+    const result = await client.query(
+      `
+      SELECT status, COUNT(status)
+      FROM purchase_order
+      GROUP BY status
+      WHERE (id_user = $1 OR $1::VARCHAR IS NULL)
+      `,
+      [id_user]
+    );
+
+    await client.query(TRANS.COMMIT);
+    return result.rows;
+  } catch (error) {
+    console.log(error);
+    await client.query(TRANS.ROLLBACK);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = { getComparisonReport, generateComparisonExcel };

@@ -100,10 +100,16 @@ const handleGetRemainingItem = async (req, res) => {
 
 const handleGetAllGR = async (req, res) => {
   try {
-    const result = await getAllGR();
+    const [status, data] = await getAllGR();
+    const statusCount = status.reduce((accumulator, current) => {
+      accumulator[current.status] = parseInt(current.count);
+      return accumulator;
+    }, {});
+
     res.status(200).send({
       message: `Success get all GR`,
-      data: result,
+      status_count: statusCount,
+      data: data,
     });
   } catch (error) {
     res.status(500).send({

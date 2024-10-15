@@ -142,29 +142,38 @@ const getAllGR = async () => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
-    const result = await client.query(
-      `
-      SELECT 
-        gr.id,
-        gr.id_po,
-        gr.id_gr,
-        gr.gr_date,
-        po.po_date,
-        gr.grand_total,
-        c.company_name,
-        v.vendor_name,
-        gr.status,
-        u.name AS user_name
-      FROM goods_receipt gr
-      JOIN purchase_order po ON gr.id_po = po.id_po
-      JOIN mst_company c ON po.id_company = c.id_company
-      JOIN mst_vendor v ON po.id_vendor = v.id_vendor
-      JOIN mst_user u ON po.id_user = u.id_user
-      ORDER BY gr_date DESC
-      `
-    );
+    const [status, data] = await Promise.all([
+      await client.query(
+        `
+        SELECT status, COUNT(status)
+        FROM goods_receipt
+        GROUP BY status
+        `
+      ),
+      await client.query(
+        `
+        SELECT 
+          gr.id,
+          gr.id_po,
+          gr.id_gr,
+          gr.gr_date,
+          po.po_date,
+          gr.grand_total,
+          c.company_name,
+          v.vendor_name,
+          gr.status,
+          u.name AS user_name
+        FROM goods_receipt gr
+        JOIN purchase_order po ON gr.id_po = po.id_po
+        JOIN mst_company c ON po.id_company = c.id_company
+        JOIN mst_vendor v ON po.id_vendor = v.id_vendor
+        JOIN mst_user u ON po.id_user = u.id_user
+        ORDER BY gr_date DESC
+        `
+      ),
+    ]);
     await client.query(TRANS.COMMIT);
-    return result.rows;
+    return [status.rows, data.rows];
   } catch (error) {
     console.log(error);
     await client.query(TRANS.ROLLBACK);
