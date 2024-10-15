@@ -128,12 +128,22 @@ const getAllPO = async () => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
-    const [status, data] = await Promise.all([
+    const [status, company, data] = await Promise.all([
       await client.query(
         `
         SELECT status, COUNT(status)
         FROM purchase_order
         GROUP BY status
+        `
+      ),
+      await client.query(
+        `
+        SELECT c.company_name, count(c.company_name) AS company_count
+        FROM purchase_order po
+        JOIN mst_company c ON po.id_company = c.id_company 
+        GROUP BY c.company_name
+        ORDER BY company_count DESC
+        LIMIT 5
         `
       ),
       await client.query(
@@ -156,7 +166,7 @@ const getAllPO = async () => {
       ),
     ]);
     await client.query(TRANS.COMMIT);
-    return [status.rows, data.rows];
+    return [status.rows, company.rows, data.rows];
   } catch (error) {
     console.log(error);
     await client.query(TRANS.ROLLBACK);

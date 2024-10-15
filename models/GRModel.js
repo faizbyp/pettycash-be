@@ -142,12 +142,28 @@ const getAllGR = async () => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
-    const [status, data] = await Promise.all([
+    const [status, company, amount, data] = await Promise.all([
       await client.query(
         `
         SELECT status, COUNT(status)
         FROM goods_receipt
         GROUP BY status
+        `
+      ),
+      await client.query(
+        `
+        SELECT c.company_name, count(c.company_name) AS company_count
+        FROM goods_receipt gr
+        JOIN purchase_order po ON gr.id_po = po.id_po
+        JOIN mst_company c ON po.id_company = c.id_company 
+        GROUP BY c.company_name
+        ORDER BY company_count DESC
+        LIMIT 5
+        `
+      ),
+      await client.query(
+        `
+        SELECT SUM(grand_total) FROM goods_receipt WHERE status = 'approved'
         `
       ),
       await client.query(
@@ -173,7 +189,7 @@ const getAllGR = async () => {
       ),
     ]);
     await client.query(TRANS.COMMIT);
-    return [status.rows, data.rows];
+    return [status.rows, company.rows, amount.rows[0], data.rows];
   } catch (error) {
     console.log(error);
     await client.query(TRANS.ROLLBACK);

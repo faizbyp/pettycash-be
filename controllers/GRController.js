@@ -100,7 +100,7 @@ const handleGetRemainingItem = async (req, res) => {
 
 const handleGetAllGR = async (req, res) => {
   try {
-    const [status, data] = await getAllGR();
+    const [status, company, money_spent, data] = await getAllGR();
     const statusCount = status.reduce((accumulator, current) => {
       accumulator[current.status] = parseInt(current.count);
       return accumulator;
@@ -108,8 +108,10 @@ const handleGetAllGR = async (req, res) => {
 
     res.status(200).send({
       message: `Success get all GR`,
+      money_spent,
       status_count: statusCount,
-      data: data,
+      company_count: company,
+      data,
     });
   } catch (error) {
     res.status(500).send({

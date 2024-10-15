@@ -60,7 +60,7 @@ const handleGetPOById = async (req, res) => {
 
 const handleGetAllPO = async (req, res) => {
   try {
-    const [status, data] = await getAllPO();
+    const [status, company, data] = await getAllPO();
     const statusCount = status.reduce((accumulator, current) => {
       accumulator[current.status] = parseInt(current.count);
       return accumulator;
@@ -69,6 +69,7 @@ const handleGetAllPO = async (req, res) => {
     res.status(200).send({
       message: `Success get all PO`,
       status_count: statusCount,
+      company_count: company,
       data: data,
     });
   } catch (error) {
