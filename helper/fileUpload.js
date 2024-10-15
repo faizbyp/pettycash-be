@@ -30,9 +30,15 @@ const parseFormUpload = async (formData, options = {}) => {
     }
 
     // Rename the file: timestamp_originalFilename.ext
+    // const oldFilePath = file[0].filepath;
+    // const originalFilename = file[0].originalFilename;
+    // const newFilename = `${Date.now()}_${originalFilename}`;
+    // const newFilePath = path.join(form.uploadDir, newFilename);
+
+    // Rename the file: timestamp_invoice_num.ext
     const oldFilePath = file[0].filepath;
-    const originalFilename = file[0].originalFilename;
-    const newFilename = `${Date.now()}_${originalFilename}`;
+    const extension = path.extname(file[0].originalFilename);
+    const newFilename = `${Date.now()}_${payload.invoice_num}${extension}`;
     const newFilePath = path.join(form.uploadDir, newFilename);
 
     await fs.promises.rename(oldFilePath, newFilePath);
