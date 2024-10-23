@@ -3,6 +3,7 @@ const TRANS = require("../config/transaction");
 const { insertQuery } = require("../helper/queryBuilder");
 const { postPOItem } = require("./POItemModel");
 const { v4: uuidv4 } = require("uuid");
+const Emailer = require("../service/mail");
 
 const postPO = async (payload, itemPayload) => {
   const client = await db.connect();
@@ -24,6 +25,10 @@ const postPO = async (payload, itemPayload) => {
     const [itemQuery, itemValue] = insertQuery("purchase_order_item", itemPayload);
     console.log(itemQuery, itemPayload);
     const itemResult = await client.query(itemQuery, itemValue);
+
+    const Email = new Emailer();
+    const emailResult = await Email.newPO(id_po);
+    console.log(emailResult);
 
     await client.query(TRANS.COMMIT);
     return id_po;

@@ -2,6 +2,9 @@ const mailer = require("nodemailer");
 const emailTemplate = require("../helper/emailTemplate");
 
 class Mailer {
+  adminEmail =
+    process.env.NODE_ENV === "production" ? "kurnia.halim@kpn-corp.com" : "faizbyp@gmail.com";
+
   constructor() {
     this.tp = mailer.createTransport({
       name: "kpndomain.com",
@@ -78,7 +81,7 @@ class Mailer {
 
     const setup = {
       from: process.env.SMTP_USERNAME,
-      to: process.env.NODE_ENV === "production" ? "kurnia.halim@kpn-corp.com" : "faizbyp@gmail.com",
+      to: this.adminEmail,
       subject: "Petty Cash KPN - New User Verification",
       html: html,
     };
@@ -142,6 +145,32 @@ class Mailer {
     try {
       await this.tp.sendMail(setup);
       return emailTarget;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  async newPO(idPO) {
+    const html = emailTemplate(`
+      <h1>New Order Plan</h1>
+      <p>Hello, Admin. There's new order plan with ID:</p>
+      <h2>${idPO}</h2>
+      <p>You can review and approve/reject the order plan</p>
+      <a href="${process.env.APP_URL}/dashboard/approval/${encodeURIComponent(idPO)}"
+        class="btn btn-primary"
+      >Review</a>
+      `);
+
+    const setup = {
+      from: process.env.SMTP_USERNAME,
+      to: this.adminEmail,
+      subject: "Petty Cash KPN - New Order Plan",
+      html: html,
+    };
+    try {
+      await this.tp.sendMail(setup);
+      return idPO;
     } catch (error) {
       console.error(error);
       throw error;
