@@ -165,8 +165,7 @@ const getAllGR = async () => {
         JOIN purchase_order po ON gr.id_po = po.id_po
         JOIN mst_company c ON po.id_company = c.id_company 
         GROUP BY c.company_name
-        ORDER BY company_count DESC
-        LIMIT 5
+        ORDER BY company_name ASC
         `
       ),
       await client.query(
