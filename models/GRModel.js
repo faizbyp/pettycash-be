@@ -210,21 +210,34 @@ const GRApproval = async (payload, id_gr) => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
+    const Email = new Emailer();
     let result = null;
     if (payload.status === "approved") {
-      result = await client.query(
-        `UPDATE goods_receipt
-        SET status = $1, approval_by = $2, approval_date = $3
-        WHERE id_gr = $4`,
-        [payload.status, payload.id_user, payload.approval_date, id_gr]
-      );
+      const [update, user] = await Promise.all([
+        client.query(
+          `UPDATE goods_receipt
+          SET status = $1, approval_by = $2, approval_date = $3
+          WHERE id_gr = $4`,
+          [payload.status, payload.id_user, payload.approval_date, id_gr]
+        ),
+        client.query(`SELECT name, email FROM mst_user WHERE id_user = $1`, [payload.id_user]),
+      ]);
+      result = update;
+      const emailResult = await Email.GRApproved(id_gr, user.rows[0]);
+      console.log(emailResult);
     } else if (payload.status === "rejected") {
-      result = await client.query(
-        `UPDATE goods_receipt
-        SET status = $1, approval_by = $2, approval_date = $3, reject_notes = $4
-        WHERE id_gr = $5`,
-        [payload.status, payload.id_user, payload.approval_date, payload.reject_notes, id_gr]
-      );
+      const [update, user] = await Promise.all([
+        client.query(
+          `UPDATE goods_receipt
+          SET status = $1, approval_by = $2, approval_date = $3, reject_notes = $4
+          WHERE id_gr = $5`,
+          [payload.status, payload.id_user, payload.approval_date, payload.reject_notes, id_gr]
+        ),
+        client.query(`SELECT name, email FROM mst_user WHERE id_user = $1`, [payload.id_user]),
+      ]);
+      result = update;
+      const emailResult = await Email.GRRejected(id_gr, user.rows[0], payload.reject_notes);
+      console.log(emailResult);
     }
     await client.query(TRANS.COMMIT);
     return result.rowCount;

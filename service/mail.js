@@ -257,6 +257,61 @@ class Mailer {
       throw error;
     }
   }
+
+  async GRApproved(idGR, user) {
+    const html = emailTemplate(`
+      <h1>Order Confirmation Approved</h1>
+      <p>Hello, ${user.name}. Your order confirmation:</p>
+      <h2>${idGR}</h2>
+      <p>Is <span style="color: green;">approved</span></p>
+      <a href="${process.env.APP_URL}/dashboard/gr/${encodeURIComponent(idGR)}"
+        class="btn btn-primary"
+      >Review</a>
+      `);
+
+    const setup = {
+      from: process.env.SMTP_USERNAME,
+      to: user.email,
+      subject: "Petty Cash KPN - Order Confirmation Approved",
+      html: html,
+    };
+    try {
+      await this.tp.sendMail(setup);
+      return idGR;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  async GRRejected(idGR, user, reject_notes) {
+    const html = emailTemplate(`
+      <h1>Order Confirmation Rejected</h1>
+      <p>Hello, ${user.name}. Your order confirmation:</p>
+      <h2>${idGR}</h2>
+      <p>Is <span style="color: red;">rejected</span></p>
+      <p><span style="color: red;">Reject Notes:</span>
+      <br />${reject_notes}
+      </p>
+      <a href="${process.env.APP_URL}/dashboard/gr/${encodeURIComponent(idGR)}"
+        class="btn btn-primary"
+      >Review</a>
+      `);
+
+    const setup = {
+      from: process.env.SMTP_USERNAME,
+      to: user.email,
+      subject: "Petty Cash KPN - Order Confirmation Rejected",
+      html: html,
+    };
+    try {
+      await this.tp.sendMail(setup);
+      return idGR;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 }
 
 module.exports = Mailer;
