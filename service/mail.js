@@ -177,12 +177,12 @@ class Mailer {
     }
   }
 
-  async POApproved() {
+  async POApproved(idPO, user) {
     const html = emailTemplate(`
       <h1>Order Plan Approved</h1>
-      <p>Hello, Admin. There's new order plan with ID:</p>
+      <p>Hello, ${user.name}. Your order plan:</p>
       <h2>${idPO}</h2>
-      <p>You can review and approve/reject the order plan</p>
+      <p>Is <span style="color: green;">approved</span></p>
       <a href="${process.env.APP_URL}/dashboard/po/${encodeURIComponent(idPO)}"
         class="btn btn-primary"
       >Review</a>
@@ -190,8 +190,37 @@ class Mailer {
 
     const setup = {
       from: process.env.SMTP_USERNAME,
-      to: this.adminEmail,
-      subject: "Petty Cash KPN - New Order Plan",
+      to: user.email,
+      subject: "Petty Cash KPN - Order Plan Approved",
+      html: html,
+    };
+    try {
+      await this.tp.sendMail(setup);
+      return idPO;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  async PORejected(idPO, user, reject_notes) {
+    const html = emailTemplate(`
+      <h1>Order Plan Rejected</h1>
+      <p>Hello, ${user.name}. Your order plan:</p>
+      <h2>${idPO}</h2>
+      <p>Is <span style="color: red;">rejected</span></p>
+      <p><span style="color: red;">Reject Notes:</span>
+      <br />${reject_notes}
+      </p>
+      <a href="${process.env.APP_URL}/dashboard/po/${encodeURIComponent(idPO)}"
+        class="btn btn-primary"
+      >Review</a>
+      `);
+
+    const setup = {
+      from: process.env.SMTP_USERNAME,
+      to: user.email,
+      subject: "Petty Cash KPN - Order Plan Rejected",
       html: html,
     };
     try {

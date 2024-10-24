@@ -190,23 +190,31 @@ const POApproval = async (payload, id_po) => {
     const Email = new Emailer();
     let result = null;
     if (payload.status === "approved") {
-      result = await client.query(
-        `UPDATE purchase_order
-        SET status = $1, approval_by = $2, approval_date = $3
-        WHERE id_po = $4`,
-        [payload.status, payload.id_user, payload.approval_date, id_po]
-      );
-      // const emailResult = await Email.newPO(id_po);
-      // console.log(emailResult);
+      const [update, user] = await Promise.all([
+        client.query(
+          `UPDATE purchase_order
+          SET status = $1, approval_by = $2, approval_date = $3
+          WHERE id_po = $4`,
+          [payload.status, payload.id_user, payload.approval_date, id_po]
+        ),
+        client.query(`SELECT name, email FROM mst_user WHERE id_user = $1`, [payload.id_user]),
+      ]);
+      result = update;
+      const emailResult = await Email.POApproved(id_po, user.rows[0]);
+      console.log(emailResult);
     } else if (payload.status === "rejected") {
-      result = await client.query(
-        `UPDATE purchase_order
-        SET status = $1, approval_by = $2, approval_date = $3, reject_notes = $4
-        WHERE id_po = $5`,
-        [payload.status, payload.id_user, payload.approval_date, payload.reject_notes, id_po]
-      );
-      // const emailResult = await Email.newPO(id_po);
-      // console.log(emailResult);
+      const [update, user] = await Promise.all([
+        client.query(
+          `UPDATE purchase_order
+          SET status = $1, approval_by = $2, approval_date = $3, reject_notes = $4
+          WHERE id_po = $5`,
+          [payload.status, payload.id_user, payload.approval_date, payload.reject_notes, id_po]
+        ),
+        client.query(`SELECT name, email FROM mst_user WHERE id_user = $1`, [payload.id_user]),
+      ]);
+      result = update;
+      const emailResult = await Email.PORejected(id_po, user.rows[0], payload.reject_notes);
+      console.log(emailResult);
     }
 
     await client.query(TRANS.COMMIT);
