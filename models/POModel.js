@@ -160,6 +160,7 @@ const getAllPO = async () => {
           po.po_date,
           po.grand_total,
           po.status,
+          po.is_complete,
           c.company_name,
           v.vendor_name,
           u.name AS user_name
@@ -219,10 +220,9 @@ const POApproval = async (payload, id_po) => {
   }
 };
 
-const updatePOCompletion = async (id_po) => {
-  const client = await db.connect();
+// THIS FUNCTION SHOULD BE CALLED INSIDE A DB CONNECTION AND TRANSACTION
+const updatePOCompletion = async (client, id_po) => {
   try {
-    await client.query(TRANS.BEGIN);
     const result = await client.query(
       `
       SELECT id_po_item, is_complete FROM purchase_order_item WHERE id_po = $1 AND is_complete <> true
@@ -237,14 +237,10 @@ const updatePOCompletion = async (id_po) => {
       ]);
     }
     console.log(update);
-    await client.query(TRANS.COMMIT);
     return update.rows;
   } catch (error) {
     console.error(error);
-    await client.query(TRANS.ROLLBACK);
     throw error;
-  } finally {
-    client.release();
   }
 };
 

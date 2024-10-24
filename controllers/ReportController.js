@@ -3,7 +3,6 @@ const { parseFormUpload } = require("../helper/fileUpload");
 const { postGR, getGRByUser, getGRById } = require("../models/GRModel");
 const { postGRItem } = require("../models/GRItemModel");
 const { getRemainingItem } = require("../models/POItemModel");
-const { getPOById, updatePOCompletion } = require("../models/POModel");
 const { getComparisonReport, generateComparisonExcel } = require("../models/ReportModel");
 
 const handleGetComparisonReport = async (req, res) => {

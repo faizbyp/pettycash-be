@@ -2,7 +2,7 @@ const { parseFormUpload } = require("../helper/fileUpload");
 const { postGR, getGRByUser, getGRById, GRApproval, getAllGR } = require("../models/GRModel");
 const { postGRItem } = require("../models/GRItemModel");
 const { getRemainingItem } = require("../models/POItemModel");
-const { getPOById, updatePOCompletion } = require("../models/POModel");
+const { getPOById } = require("../models/POModel");
 
 const handleGetPOForGR = async (req, res) => {
   const id_po = decodeURIComponent(req.params.id_po);
@@ -40,8 +40,6 @@ const handlePostGR = async (req, res) => {
     };
     console.log("payload", payload);
     let result = await postGR(payload, itemPayload);
-
-    await updatePOCompletion(payload.id_po);
 
     res.status(200).send({
       message: `Success create Order Confirmation: ${payload.id_gr}`,
