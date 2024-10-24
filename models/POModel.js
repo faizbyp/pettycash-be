@@ -185,6 +185,7 @@ const POApproval = async (payload, id_po) => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
+    const Email = new Emailer();
     let result = null;
     if (payload.status === "approved") {
       result = await client.query(
@@ -193,6 +194,8 @@ const POApproval = async (payload, id_po) => {
         WHERE id_po = $4`,
         [payload.status, payload.id_user, payload.approval_date, id_po]
       );
+      // const emailResult = await Email.newPO(id_po);
+      // console.log(emailResult);
     } else if (payload.status === "rejected") {
       result = await client.query(
         `UPDATE purchase_order
@@ -200,7 +203,10 @@ const POApproval = async (payload, id_po) => {
         WHERE id_po = $5`,
         [payload.status, payload.id_user, payload.approval_date, payload.reject_notes, id_po]
       );
+      // const emailResult = await Email.newPO(id_po);
+      // console.log(emailResult);
     }
+
     await client.query(TRANS.COMMIT);
     return result.rowCount;
   } catch (error) {

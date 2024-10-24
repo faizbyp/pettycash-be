@@ -3,6 +3,7 @@ const TRANS = require("../config/transaction");
 const { insertQuery } = require("../helper/queryBuilder");
 const { updatePOItemCompletion } = require("./POItemModel");
 const { v4: uuidv4 } = require("uuid");
+const Emailer = require("../service/mail");
 
 const postGR = async (payload, itemPayload) => {
   const client = await db.connect();
@@ -35,6 +36,10 @@ const postGR = async (payload, itemPayload) => {
       .filter((item) => item.is_complete === true)
       .map((item) => item.id_po_item);
     await updatePOItemCompletion(client, updateCompleteId);
+
+    const Email = new Emailer();
+    const emailResult = await Email.newGR(id_gr);
+    console.log(emailResult);
 
     await client.query(TRANS.COMMIT);
     return id_gr;

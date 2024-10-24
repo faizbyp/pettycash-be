@@ -157,7 +157,33 @@ class Mailer {
       <p>Hello, Admin. There's new order plan with ID:</p>
       <h2>${idPO}</h2>
       <p>You can review and approve/reject the order plan</p>
-      <a href="${process.env.APP_URL}/dashboard/approval/${encodeURIComponent(idPO)}"
+      <a href="${process.env.APP_URL}/dashboard/po/${encodeURIComponent(idPO)}"
+        class="btn btn-primary"
+      >Review</a>
+      `);
+
+    const setup = {
+      from: process.env.SMTP_USERNAME,
+      to: this.adminEmail,
+      subject: `Petty Cash KPN - New Order Plan ${idPO}`,
+      html: html,
+    };
+    try {
+      await this.tp.sendMail(setup);
+      return idPO;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  async POApproved() {
+    const html = emailTemplate(`
+      <h1>Order Plan Approved</h1>
+      <p>Hello, Admin. There's new order plan with ID:</p>
+      <h2>${idPO}</h2>
+      <p>You can review and approve/reject the order plan</p>
+      <a href="${process.env.APP_URL}/dashboard/po/${encodeURIComponent(idPO)}"
         class="btn btn-primary"
       >Review</a>
       `);
@@ -171,6 +197,32 @@ class Mailer {
     try {
       await this.tp.sendMail(setup);
       return idPO;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  async newGR(idGR) {
+    const html = emailTemplate(`
+      <h1>New Order Confirmation</h1>
+      <p>Hello, Admin. There's new order confirmation with ID:</p>
+      <h2>${idGR}</h2>
+      <p>You can review and approve/reject the order confirmation</p>
+      <a href="${process.env.APP_URL}/dashboard/gr/${encodeURIComponent(idGR)}"
+        class="btn btn-primary"
+      >Review</a>
+      `);
+
+    const setup = {
+      from: process.env.SMTP_USERNAME,
+      to: this.adminEmail,
+      subject: `Petty Cash KPN - New Order Confirmation ${idGR}`,
+      html: html,
+    };
+    try {
+      await this.tp.sendMail(setup);
+      return idGR;
     } catch (error) {
       console.error(error);
       throw error;
