@@ -53,6 +53,7 @@ const getPOByUser = async (id_user, status, is_complete) => {
         po.po_date,
         po.grand_total,
         po.status,
+        po.is_complete,
         c.company_name,
         v.vendor_name
       FROM purchase_order po
