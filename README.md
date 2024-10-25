@@ -42,15 +42,24 @@ docker run -p 5000:5000 --env-file .env.production faizbyp/pettycash-be:x.x.x
 
 4. Ask the infra team to update the deployment image based on the updated tag on Docker Hub.
 
-5. Update deployment history in `README.md`
+5. Update deployment log in `README.md`
 
-## History
+## Deployment Log
 
 ### `1.0.2`
 
-feat: reset password
-update: invoice file name tied to its number
-perf: update order plan and conf pie chart
-perf: update company chart
-fix: server restart after file upload
-remove watch from pm2 config
+- feat: reset password
+- update: invoice file name tied to its number
+- perf: update order plan and conf pie chart
+- perf: update company chart
+- fix: server restart after file upload
+- remove watch from pm2 config
+
+### `1.0.3`
+
+- feat: new po and new gr notif
+- update: add is complete to get po by user
+- perf: po completion on single transaction
+- feat: po approval notif
+- update: company bar chart
+- feat: gr approval notif
