@@ -1,4 +1,12 @@
-const { postPO, getPOByUser, getPOById, getAllPO, POApproval } = require("../models/POModel");
+const {
+  postPO,
+  getPOByUser,
+  getPOById,
+  getAllPO,
+  POApproval,
+  reqCancelPO,
+  cancelPO,
+} = require("../models/POModel");
 const { v4: uuidv4 } = require("uuid");
 
 const handlePostPO = async (req, res) => {
@@ -59,8 +67,9 @@ const handleGetPOById = async (req, res) => {
 };
 
 const handleGetAllPO = async (req, res) => {
+  const req_cancel = req.query.req_cancel || false;
   try {
-    const [status, company, data] = await getAllPO();
+    const [status, company, data] = await getAllPO(req_cancel);
     const statusCount = status.reduce((accumulator, current) => {
       accumulator[current.status] = parseInt(current.count);
       return accumulator;
@@ -103,10 +112,64 @@ const handlePOApproval = async (req, res) => {
   }
 };
 
+const handleReqCancelPO = async (req, res) => {
+  const cancel_reason = req.body.cancel_reason;
+  const id_po = decodeURIComponent(req.params.id_po);
+  try {
+    if (!id_po) {
+      throw new Error("Bad Request");
+    }
+    if (!cancel_reason) {
+      throw new Error("Reason is required");
+    }
+    const result = await reqCancelPO(cancel_reason, id_po);
+    res.status(200).send({
+      message: `PO ${id_po} cancel request sent`,
+    });
+  } catch (error) {
+    if (error.message === "Bad Request" || error.message === "Reason is required") {
+      res.status(400).send({
+        message: error.message,
+      });
+    } else {
+      res.status(500).send({
+        message: error.message,
+      });
+    }
+  }
+};
+
+const handleCancelPO = async (req, res) => {
+  const approval = req.body.status;
+  const notes = req.body.notes;
+  const id_po = decodeURIComponent(req.params.id_po);
+  try {
+    if (!id_po) {
+      throw new Error("Bad Request");
+    }
+    const result = await cancelPO(approval, notes, id_po);
+    res.status(200).send({
+      message: `PO ${id_po} cancel approval success`,
+    });
+  } catch (error) {
+    if (error.message === "Bad Request") {
+      res.status(400).send({
+        message: error.message,
+      });
+    } else {
+      res.status(500).send({
+        message: error.message,
+      });
+    }
+  }
+};
+
 module.exports = {
   handlePostPO,
   handleGetPOByUser,
   handleGetPOById,
   handleGetAllPO,
   handlePOApproval,
+  handleReqCancelPO,
+  handleCancelPO,
 };

@@ -312,6 +312,63 @@ class Mailer {
       throw error;
     }
   }
+
+  async POCancelReqApproved(idPO, user) {
+    const html = emailTemplate(`
+      <h1>Order Plan Cancel Approved</h1>
+      <p>Hello, ${user.name}. Your order plan cancel request:</p>
+      <h2>${idPO}</h2>
+      <p>Is <span style="color: green;">approved</span></p>
+      <p>You can now edit the order plan and adjust it.</p>
+      <a href="${process.env.APP_URL}/dashboard/po/${encodeURIComponent(idPO)}"
+        class="btn btn-primary"
+      >Review</a>
+      `);
+
+    const setup = {
+      from: process.env.SMTP_USERNAME,
+      to: user.email,
+      subject: "Petty Cash KPN - Order Plan Cancel Request Approved",
+      html: html,
+    };
+    try {
+      await this.tp.sendMail(setup);
+      return idPO;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  async POCancelReqRejected(idPO, user, notes) {
+    const html = emailTemplate(`
+      <h1>Order Plan Cancel Rejected</h1>
+      <p>Hello, ${user.name}. Your order plan cancel request:</p>
+      <h2>${idPO}</h2>
+      <p>Is <span style="color: red;">rejected</span></p>
+      <p><span style="color: red;">Notes:</span>
+      <br />${notes}
+      </p>
+      <p>Your order plan status is set to its initial (approved)</p>
+      <a href="${process.env.APP_URL}/dashboard/po/${encodeURIComponent(idPO)}"
+        class="btn btn-primary"
+      >Review</a>
+      `);
+
+    const setup = {
+      from: process.env.SMTP_USERNAME,
+      to: user.email,
+      subject: "Petty Cash KPN - Order Plan Cancel Request Rejected",
+      html: html,
+    };
+    try {
+      await this.tp.sendMail(setup);
+      return idPO;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 }
 
 module.exports = Mailer;

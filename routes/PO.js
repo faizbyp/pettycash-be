@@ -6,6 +6,8 @@ const {
   handleGetPOById,
   handleGetAllPO,
   handlePOApproval,
+  handleReqCancelPO,
+  handleCancelPO,
 } = require("../controllers/POController");
 const router = express.Router();
 
@@ -14,5 +16,7 @@ router.get("/", handleGetAllPO);
 router.patch("/approval/:id_po", handlePOApproval);
 router.get("/user/:id_user", handleGetPOByUser);
 router.get("/:id_po", handleGetPOById);
+router.patch("/req-cancel/:id_po", handleReqCancelPO);
+router.patch("/cancel/:id_po", handleCancelPO);
 
 module.exports = router;

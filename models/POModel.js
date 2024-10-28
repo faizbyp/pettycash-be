@@ -92,7 +92,7 @@ const getPOById = async (id_po) => {
       throw new Error("PO not found");
     }
 
-    const [companyResult, vendorResult, itemResult] = await Promise.all([
+    const [companyResult, vendorResult, itemResult, has_gr] = await Promise.all([
       client.query(`SELECT * FROM mst_company WHERE id_company = $1`, [result.rows[0].id_company]),
       client.query(`SELECT * FROM mst_vendor WHERE id_vendor = $1`, [result.rows[0].id_vendor]),
       client.query(
@@ -109,12 +109,19 @@ const getPOById = async (id_po) => {
           poi.id, poi.id_po_item, poi.qty`,
         [id_po]
       ),
+      client.query(
+        `
+        SELECT id_gr FROM goods_receipt WHERE id_po = $1
+        `,
+        [id_po]
+      ),
     ]);
 
     await client.query(TRANS.COMMIT);
 
     const finalResult = {
       ...result.rows[0],
+      has_gr: has_gr.rowCount !== 0,
       company: companyResult.rows[0],
       vendor: vendorResult.rows[0],
       items: itemResult.rows,
@@ -130,7 +137,7 @@ const getPOById = async (id_po) => {
   }
 };
 
-const getAllPO = async () => {
+const getAllPO = async (reqCancel) => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
@@ -160,6 +167,7 @@ const getAllPO = async () => {
           po.grand_total,
           po.status,
           po.is_complete,
+          po.cancel_reason,
           c.company_name,
           v.vendor_name,
           u.name AS user_name
@@ -167,8 +175,10 @@ const getAllPO = async () => {
         JOIN mst_company c ON po.id_company = c.id_company
         JOIN mst_vendor v ON po.id_vendor = v.id_vendor
         JOIN mst_user u ON po.id_user = u.id_user
+        WHERE (po.cancel_reason IS NOT NULL AND po.cancel_reason <> '' OR NOT $1)
         ORDER BY po_date DESC
-        `
+        `,
+        [reqCancel]
       ),
     ]);
     await client.query(TRANS.COMMIT);
@@ -251,6 +261,100 @@ const updatePOCompletion = async (client, id_po) => {
   }
 };
 
+const reqCancelPO = async (reason, id_po) => {
+  const client = await db.connect();
+  try {
+    await client.query(TRANS.BEGIN);
+    const Email = new Emailer();
+    let result = null;
+    const [update, has_gr] = await Promise.all([
+      client.query(
+        `UPDATE purchase_order
+          SET cancel_reason = $1
+          WHERE id_po = $2`,
+        [reason, id_po]
+      ),
+      client.query(
+        `
+        SELECT id_gr FROM goods_receipt WHERE id_po = $1
+        `,
+        [id_po]
+      ),
+    ]);
+    result = update;
+    if (has_gr.rowCount !== 0) throw new Error("Cannot cancel PO with existing GR");
+    if (result.rowCount === 0) throw new Error("ID PO not found");
+
+    // const emailResult = await Email.POApproved(id_po, user.rows[0]);
+    // console.log(emailResult);
+
+    await client.query(TRANS.COMMIT);
+    return result.rowCount;
+  } catch (error) {
+    console.log(error);
+    await client.query(TRANS.ROLLBACK);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+const cancelPO = async (approval, notes, id_po) => {
+  const client = await db.connect();
+  try {
+    await client.query(TRANS.BEGIN);
+    const Email = new Emailer();
+    let result = null;
+
+    if (approval === "approved") {
+      const [update, user] = await Promise.all([
+        client.query(
+          `UPDATE purchase_order
+              SET status = 'canceled', approval_by = null, approval_date = null, cancel_reason = null
+              WHERE id_po = $1`,
+          [id_po]
+        ),
+        client.query(
+          `
+          SELECT u.name, u.email FROM purchase_order po JOIN mst_user u ON po.id_user = u.id_user WHERE id_po = $1`,
+          [id_po]
+        ),
+      ]);
+      result = update;
+      const emailResult = await Email.POCancelReqApproved(id_po, user.rows[0]);
+      console.log(emailResult);
+    }
+    if (approval === "rejected") {
+      const [update, user] = await Promise.all([
+        client.query(
+          `UPDATE purchase_order
+              SET cancel_reason = null
+              WHERE id_po = $1`,
+          [id_po]
+        ),
+        client.query(
+          `
+          SELECT u.name, u.email FROM purchase_order po JOIN mst_user u ON po.id_user = u.id_user WHERE id_po = $1`,
+          [id_po]
+        ),
+      ]);
+      result = update;
+      const emailResult = await Email.POCancelReqRejected(id_po, user.rows[0], notes);
+      console.log(emailResult);
+    }
+
+    await client.query(TRANS.COMMIT);
+    console.log(result);
+    return result;
+  } catch (error) {
+    console.log(error);
+    await client.query(TRANS.ROLLBACK);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   postPO,
   getPOByUser,
@@ -258,4 +362,6 @@ module.exports = {
   getAllPO,
   POApproval,
   updatePOCompletion,
+  reqCancelPO,
+  cancelPO,
 };
