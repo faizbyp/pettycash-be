@@ -16,7 +16,6 @@ const getComparisonReport = async (
     const result = await client.query(
       `
       SELECT 
-        gr.id,
         po.id_po,
         gr.id_gr,
         po.po_date,
@@ -25,12 +24,20 @@ const getComparisonReport = async (
         c.company_name,
         v.id_vendor,
         v.vendor_name,
-        po.sub_total AS po_sub,
-        gr.sub_total AS gr_sub,
+        SUM(poi.unit_price * poi.qty) AS po_sub,
+        SUM(gri.unit_price * gri.qty) AS gr_sub,
         po.ppn AS po_ppn,
         gr.ppn AS gr_ppn,
-        po.grand_total AS po_total,
-        gr.grand_total AS gr_total,
+        SUM(poi.unit_price * poi.qty) *
+        CASE
+          WHEN po.ppn = 0.11 THEN 1.11
+          ELSE 1.0
+        END AS po_total,
+        SUM(gri.unit_price * gri.qty) *
+        CASE
+          WHEN gr.ppn = 0.11 THEN 1.11
+          ELSE 1.0
+        END AS gr_total,
         u.name AS user_name,
         gr.invoice_num,
         JSON_AGG(
@@ -43,8 +50,8 @@ const getComparisonReport = async (
             'gr_unit_price', gri.unit_price,
             'po_unit_price', poi.unit_price,
             'uom', poi.uom,
-            'gr_amount', gri.amount,
-            'po_amount', poi.amount
+            'gr_amount', gri.unit_price * gri.qty,
+            'po_amount', poi.unit_price * poi.qty
           )
         ) AS items
         FROM goods_receipt gr
@@ -61,7 +68,7 @@ const getComparisonReport = async (
         AND (c.id_company LIKE COALESCE($5, '%'))
         AND gr.status = 'approved'
         GROUP BY 
-          gr.id, po.id_po, gr.id_gr, po.po_date, gr.gr_date, c.id_company, c.company_name, v.id_vendor, v.vendor_name, po.grand_total, gr.grand_total, u.name, po.sub_total, po.ppn
+          po.id_po, gr.id_gr, po.po_date, gr.gr_date, c.id_company, c.company_name, v.id_vendor, v.vendor_name, u.name, po.ppn
         ORDER BY gr.gr_date DESC
       `,
       [gr_start_date, gr_end_date, po_start_date, po_end_date, company]
