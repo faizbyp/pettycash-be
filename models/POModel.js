@@ -48,10 +48,14 @@ const getPOByUser = async (id_user, status, is_complete) => {
     const result = await client.query(
       `
       SELECT 
-        po.id,
         po.id_po,
         po.po_date,
-        po.grand_total,
+        SUM(poi.unit_price * poi.qty) *
+          CASE
+            WHEN po.ppn = 0.11 THEN 1.11
+            ELSE 1.0
+          END
+        AS grand_total,
         po.status,
         po.is_complete,
         c.company_name,
@@ -59,9 +63,11 @@ const getPOByUser = async (id_user, status, is_complete) => {
       FROM purchase_order po
       JOIN mst_company c ON po.id_company = c.id_company
       JOIN mst_vendor v ON po.id_vendor = v.id_vendor
+      LEFT JOIN purchase_order_item poi ON po.id_po = poi.id_po
       WHERE po.id_user = $1
       AND (po.status = $2 OR $2::VARCHAR IS NULL)
       AND (po.is_complete = $3 OR $3::VARCHAR IS NULL)
+      GROUP BY po.id_po, c.company_name, v.vendor_name
       ORDER BY po_date DESC
       `,
       [id_user, status, is_complete]
@@ -83,7 +89,18 @@ const getPOById = async (id_po) => {
     await client.query(TRANS.BEGIN);
     const result = await client.query(
       `
-      SELECT * FROM purchase_order WHERE id_po = $1
+      SELECT po.*,
+      SUM(poi.unit_price * poi.qty) AS sub_total,
+      sub_total *
+        CASE
+          WHEN po.ppn = 0.11 THEN 1.11
+          ELSE 1.0
+        END
+      AS grand_total,
+      FROM purchase_order po
+      JOIN purchase_order_item poi ON po.id_po = poi.id_po
+      WHERE po.id_po = $1
+      GROUP BY po.id_po
       `,
       [id_po]
     );
@@ -99,6 +116,7 @@ const getPOById = async (id_po) => {
         `
         SELECT
           poi.*,
+          (poi.unit_price * poi.qty) AS amount,
           ABS(COALESCE(SUM(gri.qty), 0) - poi.qty) AS remaining_qty
         FROM
           purchase_order_item poi
@@ -106,7 +124,7 @@ const getPOById = async (id_po) => {
           goods_receipt_item gri ON gri.id_po_item = poi.id_po_item
           WHERE id_po = $1
         GROUP BY
-          poi.id, poi.id_po_item, poi.qty`,
+          poi.id_po_item, poi.qty`,
         [id_po]
       ),
       client.query(
@@ -151,7 +169,7 @@ const getAllPO = async (reqCancel) => {
       ),
       await client.query(
         `
-        SELECT c.company_name, count(c.company_name) AS company_count
+        SELECT c.company_name, COUNT(c.company_name) AS company_count
         FROM purchase_order po
         JOIN mst_company c ON po.id_company = c.id_company 
         GROUP BY c.company_name
@@ -164,7 +182,12 @@ const getAllPO = async (reqCancel) => {
           po.id,
           po.id_po,
           po.po_date,
-          po.grand_total,
+          SUM(poi.unit_price * poi.qty) *
+            CASE
+              WHEN po.ppn = 0.11 THEN 1.11
+              ELSE 1.0
+            END
+          AS grand_total,
           po.status,
           po.is_complete,
           po.cancel_reason,
