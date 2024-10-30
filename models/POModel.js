@@ -266,30 +266,36 @@ const reqCancelPO = async (reason, id_po) => {
   try {
     await client.query(TRANS.BEGIN);
     const Email = new Emailer();
-    let result = null;
-    const [update, has_gr] = await Promise.all([
-      client.query(
-        `UPDATE purchase_order
-          SET cancel_reason = $1
-          WHERE id_po = $2`,
-        [reason, id_po]
+    // CTE for multiple query
+    const result = await client.query(
+      `
+      WITH updated_po AS (
+        UPDATE purchase_order SET cancel_reason = $1 WHERE id_po = $2 RETURNING id_po
       ),
-      client.query(
-        `
-        SELECT id_gr FROM goods_receipt WHERE id_po = $1
-        `,
-        [id_po]
+      check_gr AS (
+        SELECT id_gr FROM goods_receipt WHERE id_po = $2
       ),
-    ]);
-    result = update;
-    if (has_gr.rowCount !== 0) throw new Error("Cannot cancel PO with existing GR");
-    if (result.rowCount === 0) throw new Error("ID PO not found");
+      user_info AS (
+        SELECT u.name FROM purchase_order po JOIN mst_user u ON po.id_user = u.id_user WHERE id_po = $2 
+      )
 
-    // const emailResult = await Email.POApproved(id_po, user.rows[0]);
-    // console.log(emailResult);
+      SELECT
+        (SELECT COUNT(*) FROM check_gr) AS gr_count,
+        (SELECT name FROM user_info) AS user_name
+      FROM updated_po;
+      `,
+      [reason, id_po]
+    );
+    console.log(result.rows);
+    if (parseInt(result.rows[0].gr_count) !== 0)
+      throw new Error("Cannot cancel PO with existing GR");
+    if (result.rows.length === 0) throw new Error("ID PO not found");
+
+    const emailResult = await Email.newPOCancelReq(id_po, result.rows[0].user_name);
+    console.log(emailResult);
 
     await client.query(TRANS.COMMIT);
-    return result.rowCount;
+    return result.rows[0];
   } catch (error) {
     console.log(error);
     await client.query(TRANS.ROLLBACK);

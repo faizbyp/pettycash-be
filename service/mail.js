@@ -313,6 +313,32 @@ class Mailer {
     }
   }
 
+  async newPOCancelReq(idPO, name) {
+    const html = emailTemplate(`
+      <h1>Order Plan Cancellation Request</h1>
+      <p>Hello, Admin. ${name} has requested to cancel order plan:</p>
+      <h2>${idPO}</h2>
+      <p>You can review and approve/reject the cancel request.</p>
+      <a href="${process.env.APP_URL}/dashboard/po/${encodeURIComponent(idPO)}"
+        class="btn btn-primary"
+      >Review</a>
+      `);
+
+    const setup = {
+      from: process.env.SMTP_USERNAME,
+      to: this.adminEmail,
+      subject: "Petty Cash KPN - Order Plan Cancellation Request",
+      html: html,
+    };
+    try {
+      const result = await this.tp.sendMail(setup);
+      return result.response;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
   async POCancelReqApproved(idPO, user) {
     const html = emailTemplate(`
       <h1>Order Plan Cancel Approved</h1>
