@@ -12,10 +12,12 @@ const { v4: uuidv4 } = require("uuid");
 const handlePostPO = async (req, res) => {
   try {
     let payload = req.body.data;
-    let itemPayload = payload.items;
+    let itemPayload = payload.items.map(({ amount, ...rest }) => rest);
 
     // PO payload
     delete payload.items;
+    delete payload.sub_total;
+    delete payload.grand_total;
     payload = {
       ...payload,
       ppn: payload.ppn ? 0.11 : 0,

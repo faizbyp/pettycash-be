@@ -91,12 +91,12 @@ const getPOById = async (id_po) => {
       `
       SELECT po.*,
       SUM(poi.unit_price * poi.qty) AS sub_total,
-      sub_total *
+      SUM(poi.unit_price * poi.qty) *
         CASE
           WHEN po.ppn = 0.11 THEN 1.11
           ELSE 1.0
         END
-      AS grand_total,
+      AS grand_total
       FROM purchase_order po
       JOIN purchase_order_item poi ON po.id_po = poi.id_po
       WHERE po.id_po = $1
@@ -179,7 +179,6 @@ const getAllPO = async (reqCancel) => {
       await client.query(
         `
         SELECT 
-          po.id,
           po.id_po,
           po.po_date,
           SUM(poi.unit_price * poi.qty) *
@@ -198,7 +197,9 @@ const getAllPO = async (reqCancel) => {
         JOIN mst_company c ON po.id_company = c.id_company
         JOIN mst_vendor v ON po.id_vendor = v.id_vendor
         JOIN mst_user u ON po.id_user = u.id_user
+        JOIN purchase_order_item poi on po.id_po = poi.id_po
         WHERE (po.cancel_reason IS NOT NULL AND po.cancel_reason <> '' OR NOT $1)
+        GROUP BY po.id_po, c.company_name, v.vendor_name, u.name
         ORDER BY po_date DESC
         `,
         [reqCancel]
