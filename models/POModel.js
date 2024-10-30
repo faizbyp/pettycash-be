@@ -124,7 +124,9 @@ const getPOById = async (id_po) => {
           goods_receipt_item gri ON gri.id_po_item = poi.id_po_item
           WHERE id_po = $1
         GROUP BY
-          poi.id_po_item, poi.qty`,
+          poi.id_po_item, poi.qty
+        ORDER BY poi.description ASC
+          `,
         [id_po]
       ),
       client.query(

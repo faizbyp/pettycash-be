@@ -28,10 +28,12 @@ const handlePostGR = async (req, res) => {
     let { payload, filename } = await parseFormUpload(req, {
       uploadDir: "/invoice",
     });
-    let itemPayload = payload.items;
+    let itemPayload = payload.items.map(({ amount, ...rest }) => rest);
 
     // GR payload
     delete payload.items;
+    delete payload.sub_total;
+    delete payload.grand_total;
     payload = {
       ...payload,
       id_gr: "CFM" + Math.floor(1000 + Math.random() * 9000) + "-" + payload.id_po,

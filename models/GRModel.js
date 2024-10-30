@@ -62,12 +62,16 @@ const getGRByUser = async (id_user) => {
     const result = await client.query(
       `
       SELECT 
-        gr.id,
         gr.id_po,
         gr.id_gr,
         gr.gr_date,
         po.po_date,
-        gr.grand_total,
+        SUM(gri.unit_price * gri.qty) *
+          CASE
+            WHEN gr.ppn = 0.11 THEN 1.11
+            ELSE 1.0
+          END
+        AS grand_total,
         c.company_name,
         v.vendor_name,
         gr.status
@@ -75,7 +79,9 @@ const getGRByUser = async (id_user) => {
       JOIN purchase_order po ON gr.id_po = po.id_po
       JOIN mst_company c ON po.id_company = c.id_company
       JOIN mst_vendor v ON po.id_vendor = v.id_vendor
+      JOIN goods_receipt_item gri ON gr.id_gr = gri.id_gr
       WHERE po.id_user = $1
+      GROUP BY gr.id_po, gr.id_gr, po.po_date, c.company_name, v.vendor_name
       ORDER BY gr_date DESC
       `,
       [id_user]
@@ -97,10 +103,22 @@ const getGRById = async (id_gr) => {
     await client.query(TRANS.BEGIN);
     const result = await client.query(
       `
-      SELECT gr.*, po.id_company, po.id_vendor
+      SELECT gr.*,
+      SUM(gri.unit_price * gri.qty)
+      AS sub_total,
+      SUM(gri.unit_price * gri.qty) *
+        CASE
+          WHEN gr.ppn = 0.11 THEN 1.11
+          ELSE 1.0
+        END
+      AS grand_total,
+      po.id_company,
+      po.id_vendor
       FROM goods_receipt gr 
       JOIN purchase_order po ON po.id_po = gr.id_po
-      WHERE id_gr = $1
+      JOIN goods_receipt_item gri ON gr.id_gr = gri.id_gr
+      WHERE gr.id_gr = $1
+      GROUP BY gr.id_gr, po.id_company, po.id_vendor
       `,
       [id_gr]
     );
@@ -116,13 +134,15 @@ const getGRById = async (id_gr) => {
         `
         SELECT
           gri.*,
+          (gri.unit_price * gri.qty) AS amount,
           poi.uom,
           poi.description
         FROM
           goods_receipt_item gri
         JOIN
           purchase_order_item poi ON poi.id_po_item = gri.id_po_item
-          WHERE id_gr = $1`,
+          WHERE id_gr = $1
+        ORDER BY poi.description ASC`,
         [id_gr]
       ),
     ]);
@@ -170,18 +190,32 @@ const getAllGR = async () => {
       ),
       await client.query(
         `
-        SELECT SUM(grand_total) FROM goods_receipt WHERE status = 'approved'
+        SELECT
+        SUM(gri.unit_price * gri.qty) *
+          CASE
+            WHEN gr.ppn = 0.11 THEN 1.11
+            ELSE 1.0
+          END
+        AS sum
+        FROM goods_receipt gr
+        JOIN goods_receipt_item gri ON gr.id_gr = gri.id_gr
+        WHERE gr.status = 'approved'
+        GROUP BY gr.ppn
         `
       ),
       await client.query(
         `
         SELECT 
-          gr.id,
           gr.id_po,
           gr.id_gr,
           gr.gr_date,
           po.po_date,
-          gr.grand_total,
+          SUM(gri.unit_price * gri.qty) *
+            CASE
+              WHEN gr.ppn = 0.11 THEN 1.11
+              ELSE 1.0
+            END
+          AS grand_total,
           c.company_name,
           v.vendor_name,
           gr.status,
@@ -191,6 +225,8 @@ const getAllGR = async () => {
         JOIN mst_company c ON po.id_company = c.id_company
         JOIN mst_vendor v ON po.id_vendor = v.id_vendor
         JOIN mst_user u ON po.id_user = u.id_user
+        JOIN goods_receipt_item gri ON gr.id_gr = gri.id_gr
+        GROUP BY gr.id_po, gr.id_gr, po.po_date, c.company_name, v.vendor_name, u.name
         ORDER BY gr_date DESC
         `
       ),
