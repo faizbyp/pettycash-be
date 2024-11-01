@@ -1,6 +1,6 @@
 const db = require("../config/connection");
 const TRANS = require("../config/transaction");
-const { insertQuery } = require("../helper/queryBuilder");
+const { insertQuery, updateQuery, deleteQuery, editItemQuery } = require("../helper/queryBuilder");
 const { postPOItem } = require("./POItemModel");
 const { v4: uuidv4 } = require("uuid");
 const Emailer = require("../service/mail");
@@ -387,6 +387,56 @@ const cancelPO = async (approval, notes, id_po) => {
   }
 };
 
+const editPO = async (payload, added_items, edited_items, deleted_items, id_po) => {
+  const client = await db.connect();
+  try {
+    await client.query(TRANS.BEGIN);
+    const [updatePOQuery, updatePOValue] = updateQuery(
+      "purchase_order",
+      payload,
+      { id_po: id_po },
+      "id_po"
+    );
+    console.log(updatePOQuery, updatePOValue);
+
+    // ADD ITEM
+    const [insertItemQuery, insertItemValue] = insertQuery(
+      "purchase_order_item",
+      added_items,
+      "id_po_item"
+    );
+    console.log(insertItemQuery, insertItemValue);
+
+    // EDIT ITEM: this query only update specific column. See the function for details
+    const editQuery = editItemQuery(edited_items);
+    console.log(editQuery);
+
+    // DELETE ITEM
+    const deleteItemQuery = `
+    DELETE FROM purchase_order_item 
+    WHERE id_po_item IN (${deleted_items.map((item) => `'${item}'`).join(", ")})`;
+    console.log(deleteItemQuery);
+
+    // EXECUTE ALL QUERY PARALLEL
+    const [updatePO, insertItem, editItem, deleteItem] = await Promise.all([
+      client.query(updatePOQuery, updatePOValue),
+      added_items.length !== 0 ? client.query(insertItemQuery, insertItemValue) : null,
+      edited_items.length !== 0 ? client.query(editQuery) : null,
+      deleted_items.length !== 0 ? client.query(deleteItemQuery) : null,
+    ]);
+
+    await client.query(TRANS.COMMIT);
+    // return updatePO.rows;
+    return;
+  } catch (error) {
+    console.log(error);
+    await client.query(TRANS.ROLLBACK);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   postPO,
   getPOByUser,
@@ -396,4 +446,5 @@ module.exports = {
   updatePOCompletion,
   reqCancelPO,
   cancelPO,
+  editPO,
 };

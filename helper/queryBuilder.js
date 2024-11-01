@@ -76,8 +76,46 @@ const updateQuery = (table, value, where, returning = null) => {
   return [query, valueArray];
 };
 
+// This function only update columns defined in columns array
+const editItemQuery = (editedItems) => {
+  // Define the table and columns to be updated
+  const tableName = "purchase_order_item";
+  const columns = ["description", "unit_price", "qty", "uom"];
+
+  // Start building the SQL query
+  let query = `UPDATE ${tableName} AS poi SET `;
+
+  // Map columns to the updated values from the temporary table (aliased as "u")
+  query += columns.map((column) => `${column} = u.${column}`).join(", ");
+
+  query += ` FROM (VALUES `;
+
+  // Iterate over each item and build the VALUES part of the query
+  const valuesClause = editedItems
+    .map((item) => {
+      return `(
+              '${item.id_po_item}',
+              '${item.description}', 
+              ${item.unit_price}, 
+              ${item.qty}, 
+              '${item.uom}' 
+          )`;
+    })
+    .join(", ");
+
+  // Append VALUES and create an alias for each column
+  query += valuesClause;
+  query += `) AS u(id_po_item, ${columns.join(", ")})`;
+
+  // Finalize the query with the join condition
+  query += ` WHERE poi.id_po_item = u.id_po_item;`;
+
+  return query;
+};
+
 module.exports = {
   insertQuery,
   deleteQuery,
   updateQuery,
+  editItemQuery,
 };

@@ -6,6 +6,7 @@ const {
   POApproval,
   reqCancelPO,
   cancelPO,
+  editPO,
 } = require("../models/POModel");
 const { v4: uuidv4 } = require("uuid");
 
@@ -166,6 +167,56 @@ const handleCancelPO = async (req, res) => {
   }
 };
 
+const handleEditPO = async (req, res) => {
+  let payload = req.body.data;
+  let added_items = payload.added_items;
+  const edited_items = payload.edited_items;
+  const deleted_items = payload.deleted_items;
+  payload = {
+    ...payload,
+    ppn: payload.ppn ? 0.11 : 0,
+    status: "pending",
+  };
+
+  // DELETE UNNECESSARY DATA
+  unnecessaryData = [
+    "added_items",
+    "edited_items",
+    "deleted_items",
+    "id_company",
+    "id_vendor",
+    "id_user",
+    "sub_total",
+    "grand_total",
+  ];
+  unnecessaryData.forEach((prop) => delete payload[prop]);
+  added_items = added_items.map(({ id_po_item, amount, id, ...rest }) => ({
+    ...rest,
+    id_po_item: uuidv4(),
+  }));
+
+  const idPO = decodeURIComponent(req.params.id_po);
+  try {
+    if (!idPO) {
+      throw new Error("Bad Request");
+    }
+    const result = await editPO(payload, added_items, edited_items, deleted_items, idPO);
+    res.status(200).send({
+      message: `PO ${idPO} edited. Status set to pending`,
+    });
+  } catch (error) {
+    if (error.message === "Bad Request") {
+      res.status(400).send({
+        message: error.message,
+      });
+    } else {
+      res.status(500).send({
+        message: error.message,
+      });
+    }
+  }
+};
+
 module.exports = {
   handlePostPO,
   handleGetPOByUser,
@@ -174,4 +225,5 @@ module.exports = {
   handlePOApproval,
   handleReqCancelPO,
   handleCancelPO,
+  handleEditPO,
 };
