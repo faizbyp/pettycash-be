@@ -1,4 +1,6 @@
-const { Pool } = require("pg");
+const { Pool, types } = require("pg");
+
+types.setTypeParser(types.builtins.DATE, (value) => value);
 
 const prodSettings = {
   host: process.env.PGHOST,
