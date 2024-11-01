@@ -202,7 +202,7 @@ const handleEditPO = async (req, res) => {
     }
     const result = await editPO(payload, added_items, edited_items, deleted_items, idPO);
     res.status(200).send({
-      message: `PO ${idPO} edited. Status set to pending`,
+      message: `PO ${idPO} edited.\nStatus set to pending`,
     });
   } catch (error) {
     if (error.message === "Bad Request") {
