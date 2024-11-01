@@ -58,6 +58,11 @@ const getPOByUser = async (id_user, status, is_complete) => {
         AS grand_total,
         po.status,
         po.is_complete,
+        EXISTS (
+          SELECT 1 
+          FROM goods_receipt gr 
+          WHERE gr.id_po = po.id_po
+        ) AS has_gr,
         c.company_name,
         v.vendor_name
       FROM purchase_order po
@@ -191,6 +196,11 @@ const getAllPO = async (reqCancel) => {
           AS grand_total,
           po.status,
           po.is_complete,
+          EXISTS (
+            SELECT 1 
+            FROM goods_receipt gr 
+            WHERE gr.id_po = po.id_po
+          ) AS has_gr,
           po.cancel_reason,
           c.company_name,
           v.vendor_name,
