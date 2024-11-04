@@ -63,3 +63,18 @@ docker run -p 5000:5000 --env-file .env.production faizbyp/pettycash-be:x.x.x
 - feat: po approval notif
 - update: company bar chart
 - feat: gr approval notif
+
+### `1.0.4`
+
+- feat: cancel po
+- update: new po cancel req notif
+- update: remove sub_total, grand_total, and amount column
+  calculate each every query
+- fix: adjust post po query to new table design
+- fix: adjust gr query to new table design
+- fix: adjust report query to new table design
+- feat: edit po on be
+- fix: pg date format return
+- update: edit return message
+- update: add has gr to all get po
+- fix: items flag empty array to repvent undefined
