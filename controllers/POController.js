@@ -169,9 +169,9 @@ const handleCancelPO = async (req, res) => {
 
 const handleEditPO = async (req, res) => {
   let payload = req.body.data;
-  let added_items = payload.added_items;
-  const edited_items = payload.edited_items;
-  const deleted_items = payload.deleted_items;
+  let added_items = payload.added_items || [];
+  const edited_items = payload.edited_items || [];
+  const deleted_items = payload.deleted_items || [];
   payload = {
     ...payload,
     ppn: payload.ppn ? 0.11 : 0,
