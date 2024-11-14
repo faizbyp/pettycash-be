@@ -110,7 +110,7 @@ const handleGetAllGR = async (req, res) => {
       message: `Success get all GR`,
       money_spent,
       status_count: statusCount,
-      company_count: company,
+      company_total: company,
       data,
     });
   } catch (error) {
