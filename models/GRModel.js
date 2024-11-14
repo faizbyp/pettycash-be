@@ -113,12 +113,13 @@ const getGRById = async (id_gr) => {
         END
       AS grand_total,
       po.id_company,
-      po.id_vendor
+      po.id_vendor,
+      po.po_date
       FROM goods_receipt gr 
       JOIN purchase_order po ON po.id_po = gr.id_po
       JOIN goods_receipt_item gri ON gr.id_gr = gri.id_gr
       WHERE gr.id_gr = $1
-      GROUP BY gr.id_gr, po.id_company, po.id_vendor
+      GROUP BY gr.id_gr, po.id_company, po.id_vendor, po.po_date
       `,
       [id_gr]
     );
