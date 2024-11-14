@@ -1,3 +1,45 @@
+const reusableQuery = {
+  poStatus: `
+    SELECT status, COUNT(status)
+    FROM purchase_order
+    GROUP BY status
+  `,
+  grStatus: `
+    SELECT status, COUNT(status)
+    FROM goods_receipt
+    GROUP BY status
+  `,
+  companyTotal: `
+    SELECT c.company_name,
+    SUM(gri.unit_price * gri.qty) *
+      CASE
+        WHEN gr.ppn = 0.11 THEN 1.11
+        ELSE 1.0
+      END
+    AS grand_total
+    FROM goods_receipt gr
+    JOIN purchase_order po ON gr.id_po = po.id_po
+    JOIN mst_company c ON po.id_company = c.id_company 
+    JOIN goods_receipt_item gri ON gr.id_gr = gri.id_gr
+    WHERE gr.status = 'approved'
+    GROUP BY c.company_name, gr.ppn
+    ORDER BY company_name ASC
+  `,
+  amount: `
+    SELECT
+    SUM(gri.unit_price * gri.qty) *
+      CASE
+        WHEN gr.ppn = 0.11 THEN 1.11
+        ELSE 1.0
+      END
+    AS sum
+    FROM goods_receipt gr
+    JOIN goods_receipt_item gri ON gr.id_gr = gri.id_gr
+    WHERE gr.status = 'approved'
+    GROUP BY gr.ppn
+  `,
+};
+
 const insertQuery = (table, values, returning = null) => {
   let valuesArray = [];
 
@@ -114,6 +156,7 @@ const editItemQuery = (editedItems) => {
 };
 
 module.exports = {
+  reusableQuery,
   insertQuery,
   deleteQuery,
   updateQuery,

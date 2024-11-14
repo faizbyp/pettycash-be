@@ -3,7 +3,39 @@ const { parseFormUpload } = require("../helper/fileUpload");
 const { postGR, getGRByUser, getGRById } = require("../models/GRModel");
 const { postGRItem } = require("../models/GRItemModel");
 const { getRemainingItem } = require("../models/POItemModel");
-const { getComparisonReport, generateComparisonExcel } = require("../models/ReportModel");
+const {
+  getComparisonReport,
+  generateComparisonExcel,
+  getChartData,
+} = require("../models/ReportModel");
+
+const handleGetChartData = async (req, res) => {
+  try {
+    const [amount, companyTotal, poStatus, grStatus] = await getChartData();
+    const po_status = poStatus.reduce((accumulator, current) => {
+      accumulator[current.status] = parseInt(current.count);
+      return accumulator;
+    }, {});
+    const gr_status = grStatus.reduce((accumulator, current) => {
+      accumulator[current.status] = parseInt(current.count);
+      return accumulator;
+    }, {});
+
+    res.status(200).send({
+      message: `Success get chart data`,
+      data: {
+        money_spent: amount,
+        company_total: companyTotal,
+        po_status,
+        gr_status,
+      },
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: error.message,
+    });
+  }
+};
 
 const handleGetComparisonReport = async (req, res) => {
   const gr_start_date = req.query.gr_start_date || null;
@@ -64,4 +96,4 @@ const handleGenerateComparison = async (req, res) => {
   }
 };
 
-module.exports = { handleGetComparisonReport, handleGenerateComparison };
+module.exports = { handleGetChartData, handleGetComparisonReport, handleGenerateComparison };

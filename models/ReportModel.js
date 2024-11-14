@@ -1,7 +1,29 @@
 const db = require("../config/connection");
 const TRANS = require("../config/transaction");
-const { insertQuery } = require("../helper/queryBuilder");
+const { insertQuery, reusableQuery } = require("../helper/queryBuilder");
 const ExcelJS = require("exceljs");
+
+const getChartData = async () => {
+  const client = await db.connect();
+  try {
+    await client.query(TRANS.BEGIN);
+    const [amount, companyTotal, poStatus, grStatus] = await Promise.all([
+      await client.query(reusableQuery.amount),
+      await client.query(reusableQuery.companyTotal),
+      await client.query(reusableQuery.poStatus),
+      await client.query(reusableQuery.grStatus),
+    ]);
+
+    await client.query(TRANS.COMMIT);
+    return [amount.rows[0], companyTotal.rows, poStatus.rows, grStatus.rows];
+  } catch (error) {
+    console.log(error);
+    await client.query(TRANS.ROLLBACK);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
 
 const getComparisonReport = async (
   gr_start_date,
@@ -200,4 +222,4 @@ const reportChart = async (id_user) => {
   }
 };
 
-module.exports = { getComparisonReport, generateComparisonExcel };
+module.exports = { getChartData, getComparisonReport, generateComparisonExcel };

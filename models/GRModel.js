@@ -1,6 +1,6 @@
 const db = require("../config/connection");
 const TRANS = require("../config/transaction");
-const { insertQuery } = require("../helper/queryBuilder");
+const { insertQuery, reusableQuery } = require("../helper/queryBuilder");
 const { updatePOItemCompletion } = require("./POItemModel");
 const { v4: uuidv4 } = require("uuid");
 const Emailer = require("../service/mail");
@@ -172,46 +172,9 @@ const getAllGR = async () => {
   try {
     await client.query(TRANS.BEGIN);
     const [status, company, amount, data] = await Promise.all([
-      await client.query(
-        `
-        SELECT status, COUNT(status)
-        FROM goods_receipt
-        GROUP BY status
-        `
-      ),
-      await client.query(
-        `
-        SELECT c.company_name,
-        SUM(gri.unit_price * gri.qty) *
-          CASE
-            WHEN gr.ppn = 0.11 THEN 1.11
-            ELSE 1.0
-          END
-        AS grand_total
-        FROM goods_receipt gr
-        JOIN purchase_order po ON gr.id_po = po.id_po
-        JOIN mst_company c ON po.id_company = c.id_company 
-        JOIN goods_receipt_item gri ON gr.id_gr = gri.id_gr
-        WHERE gr.status = 'approved'
-        GROUP BY c.company_name, gr.ppn
-        ORDER BY company_name ASC
-        `
-      ),
-      await client.query(
-        `
-        SELECT
-        SUM(gri.unit_price * gri.qty) *
-          CASE
-            WHEN gr.ppn = 0.11 THEN 1.11
-            ELSE 1.0
-          END
-        AS sum
-        FROM goods_receipt gr
-        JOIN goods_receipt_item gri ON gr.id_gr = gri.id_gr
-        WHERE gr.status = 'approved'
-        GROUP BY gr.ppn
-        `
-      ),
+      await client.query(reusableQuery.grStatus),
+      await client.query(reusableQuery.companyTotal),
+      await client.query(reusableQuery.amount),
       await client.query(
         `
         SELECT 

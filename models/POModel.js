@@ -1,6 +1,12 @@
 const db = require("../config/connection");
 const TRANS = require("../config/transaction");
-const { insertQuery, updateQuery, deleteQuery, editItemQuery } = require("../helper/queryBuilder");
+const {
+  insertQuery,
+  updateQuery,
+  deleteQuery,
+  editItemQuery,
+  reusableQuery,
+} = require("../helper/queryBuilder");
 const { postPOItem } = require("./POItemModel");
 const { v4: uuidv4 } = require("uuid");
 const Emailer = require("../service/mail");
@@ -166,23 +172,8 @@ const getAllPO = async (reqCancel) => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
-    const [status, company, data] = await Promise.all([
-      await client.query(
-        `
-        SELECT status, COUNT(status)
-        FROM purchase_order
-        GROUP BY status
-        `
-      ),
-      await client.query(
-        `
-        SELECT c.company_name, COUNT(c.company_name) AS company_count
-        FROM purchase_order po
-        JOIN mst_company c ON po.id_company = c.id_company 
-        GROUP BY c.company_name
-        ORDER BY company_name ASC
-        `
-      ),
+    const [status, data] = await Promise.all([
+      await client.query(reusableQuery.poStatus),
       await client.query(
         `
         SELECT 
@@ -218,7 +209,7 @@ const getAllPO = async (reqCancel) => {
       ),
     ]);
     await client.query(TRANS.COMMIT);
-    return [status.rows, company.rows, data.rows];
+    return [status.rows, data.rows];
   } catch (error) {
     console.log(error);
     await client.query(TRANS.ROLLBACK);
