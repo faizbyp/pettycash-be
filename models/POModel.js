@@ -101,6 +101,7 @@ const getPOById = async (id_po) => {
     const result = await client.query(
       `
       SELECT po.*,
+      u.name AS approval_by,
       SUM(poi.unit_price * poi.qty) AS sub_total,
       SUM(poi.unit_price * poi.qty) *
         CASE
@@ -110,8 +111,9 @@ const getPOById = async (id_po) => {
       AS grand_total
       FROM purchase_order po
       JOIN purchase_order_item poi ON po.id_po = poi.id_po
+      JOIN mst_user u ON po.approval_by = u.id_user
       WHERE po.id_po = $1
-      GROUP BY po.id_po
+      GROUP BY po.id_po, u.name
       `,
       [id_po]
     );
