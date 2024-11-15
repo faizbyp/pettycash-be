@@ -8,11 +8,12 @@ const {
   handleGRApproval,
   handleGetAllGR,
 } = require("../controllers/GRController");
+const { isAdmin } = require("../middleware/auth");
 const router = express.Router();
 
 router.post("/", handlePostGR);
 router.get("/", handleGetAllGR);
-router.patch("/approval/:id_gr", handleGRApproval);
+router.patch("/approval/:id_gr", isAdmin, handleGRApproval);
 router.get("/user/:id_user", handleGetGRByUser);
 router.get("/remaining", handleGetRemainingItem);
 router.get("/po/:id_po", handleGetPOForGR);
