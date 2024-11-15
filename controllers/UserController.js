@@ -6,6 +6,7 @@ const {
   loginUser,
   reqResetPassword,
   resetPassword,
+  getNewToken,
 } = require("../models/UserModel");
 const jwt = require("jsonwebtoken");
 const emailTemplate = require("../helper/emailTemplate");
@@ -14,8 +15,10 @@ const { validateOTP } = require("../helper/auth/OTP");
 const handleLoginUser = async (req, res) => {
   const emailOrUname = req.body.username;
   const password = req.body.password;
+
   try {
-    const { data, accessToken, refreshToken } = await loginUser(emailOrUname, password);
+    const { data, accessToken } = await loginUser(emailOrUname, password);
+
     res.status(200).send({
       message: `Success sign in, welcome ${data.name}`,
       data: {
@@ -24,8 +27,7 @@ const handleLoginUser = async (req, res) => {
         email: data.email,
         id_user: data.id_user,
         id_role: data.id_role,
-        accessToken: accessToken,
-        refreshToken: refreshToken,
+        access_token: accessToken,
       },
     });
   } catch (error) {
@@ -34,27 +36,6 @@ const handleLoginUser = async (req, res) => {
     }
     res.status(500).send({ message: error.message });
   }
-};
-
-const refreshAccessToken = async (req, res) => {
-  const refreshToken = req.body?.refreshToken;
-  const payload = {
-    email: req.body.email,
-    username: req.body.username,
-    name: req.body.name,
-    id_user: req.body.id_user,
-  };
-  if (refreshToken === undefined) {
-    res.status(401).send({
-      message: "Unauthorized",
-    });
-  }
-  const newAccessToken = jwt.sign(payload, process.env.SECRETJWT, {
-    expiresIn: "6h",
-  });
-  res.status(200).send({
-    accessToken: newAccessToken,
-  });
 };
 
 const handleRegisterUser = async (req, res) => {
@@ -193,12 +174,42 @@ const handleResetPassword = async (req, res) => {
   }
 };
 
+const refreshAccessToken = async (req, res) => {
+  const authHeaders = req.headers.Authorization || req.headers.authorization;
+  if (!authHeaders) {
+    res.status(403).send({
+      message: "Access Denied",
+    });
+  }
+
+  const payload = {
+    id_user: req.body.id_user,
+    username: req.body.username,
+    name: req.body.name,
+    email: req.body.email,
+  };
+
+  try {
+    const token = await getNewToken(payload);
+    return res.status(200).send({
+      access_token: token,
+    });
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(403).send({ message: "Refresh Token Expired. Logging out." });
+    }
+    return res.status(500).send({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   handleRegisterUser,
   handleVerifyUser,
   handleLoginUser,
-  refreshAccessToken,
   handleReqResetPassword,
   handleVerifyResetPassword,
   handleResetPassword,
+  refreshAccessToken,
 };

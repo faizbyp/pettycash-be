@@ -104,6 +104,7 @@ const getGRById = async (id_gr) => {
     const result = await client.query(
       `
       SELECT gr.*,
+      u.name AS approval_by,
       SUM(gri.unit_price * gri.qty)
       AS sub_total,
       SUM(gri.unit_price * gri.qty) *
@@ -118,8 +119,9 @@ const getGRById = async (id_gr) => {
       FROM goods_receipt gr 
       JOIN purchase_order po ON po.id_po = gr.id_po
       JOIN goods_receipt_item gri ON gr.id_gr = gri.id_gr
+      JOIN mst_user u ON gr.approval_by = u.id_user
       WHERE gr.id_gr = $1
-      GROUP BY gr.id_gr, po.id_company, po.id_vendor, po.po_date
+      GROUP BY gr.id_gr, po.id_company, po.id_vendor, po.po_date, u.name
       `,
       [id_gr]
     );

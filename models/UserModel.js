@@ -2,6 +2,7 @@ const db = require("../config/connection");
 const TRANS = require("../config/transaction");
 const { createOTP, validateOTP, validateToken } = require("../helper/auth/OTP");
 const { validatePassword, hashPassword } = require("../helper/auth/password");
+const { accessExpiry, refreshExpiry } = require("../helper/constant");
 const { insertQuery, deleteQuery, updateQuery } = require("../helper/queryBuilder");
 const Emailer = require("../service/mail");
 const jwt = require("jsonwebtoken");
@@ -10,9 +11,7 @@ const loginUser = async (emailOrUname, password) => {
   const client = await db.connect();
   try {
     await client.query(TRANS.BEGIN);
-    // if (process.env.MYSQLDB === "mrbapp") {
-    //   now = convertTZ(now, "Asia/Jakarta");
-    // }
+
     const checkUserData = await client.query(
       "SELECT * FROM mst_user WHERE username = $1 OR email = $2",
       [emailOrUname, emailOrUname]
@@ -20,34 +19,47 @@ const loginUser = async (emailOrUname, password) => {
     if (checkUserData.rows.length === 0) {
       throw new Error("User Not Found");
     }
+
     const data = checkUserData.rows[0];
-    await client.query(TRANS.COMMIT);
-    const refreshToken = jwt.sign(
-      {
-        email: data.email,
-        username: data.username,
-        name: data.name,
-        id_user: data.id_user,
-      },
-      process.env.SECRETJWT,
-      { expiresIn: "6h" }
-    );
+
     const accessToken = jwt.sign(
       {
         email: data.email,
         username: data.username,
         name: data.name,
         id_user: data.id_user,
+        id_role: data.id_role,
       },
       process.env.SECRETJWT,
-      { expiresIn: "5m" }
+      { expiresIn: accessExpiry }
     );
+
+    const refreshToken = jwt.sign(
+      {
+        email: data.email,
+        username: data.username,
+        name: data.name,
+        id_user: data.id_user,
+        id_role: data.id_role,
+      },
+      process.env.SECRETJWT,
+      { expiresIn: refreshExpiry }
+    );
+
+    const [insertToken, valueToken] = updateQuery(
+      "mst_user",
+      { refresh_token: refreshToken },
+      { id_user: data.id_user }
+    );
+    await client.query(insertToken, valueToken);
+
     if (data) {
       const valid = await validatePassword(password, data.password);
       if (!valid) {
         throw new Error("Invalid Password");
       } else {
-        return { data, accessToken, refreshToken };
+        await client.query(TRANS.COMMIT);
+        return { data, accessToken };
       }
     } else {
       throw new Error("User Not Found");
@@ -225,10 +237,49 @@ const resetPassword = async (newPass, email) => {
   }
 };
 
+const getNewToken = async (data) => {
+  const client = await db.connect();
+  try {
+    await client.query(TRANS.BEGIN);
+    const result = await client.query(
+      `
+      SELECT refresh_token FROM mst_user WHERE id_user = $1
+      `,
+      [data.id_user]
+    );
+    const refreshToken = result.rows[0].refresh_token;
+
+    jwt.verify(refreshToken, process.env.SECRETJWT);
+    // If error, error.name === "TokenExpiredError"
+
+    const newToken = jwt.sign(
+      {
+        email: data.email,
+        username: data.username,
+        name: data.name,
+        id_user: data.id_user,
+        id_role: data.id_role,
+      },
+      process.env.SECRETJWT,
+      { expiresIn: accessExpiry }
+    );
+
+    await client.query(TRANS.COMMIT);
+    return newToken;
+  } catch (error) {
+    await client.query(TRANS.ROLLBACK);
+    console.error(error);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   registerUser,
   verifyUser,
   loginUser,
   reqResetPassword,
   resetPassword,
+  getNewToken,
 };

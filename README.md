@@ -78,3 +78,9 @@ docker run -p 5000:5000 --env-file .env.production faizbyp/pettycash-be:x.x.x
 - update: edit return message
 - update: add has gr to all get po
 - fix: items flag empty array to repvent undefined
+
+### `1.0.5`
+
+- update: plan date on gr details
+- update: company orders to company spent
+- update: add charts on user dashboard

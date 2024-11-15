@@ -1,5 +1,4 @@
 const express = require("express");
-const isAuth = require("../middleware/auth");
 const {
   handlePostPO,
   handleGetPOByUser,
@@ -10,11 +9,12 @@ const {
   handleCancelPO,
   handleEditPO,
 } = require("../controllers/POController");
+const { isAdmin } = require("../middleware/auth");
 const router = express.Router();
 
 router.post("/", handlePostPO);
 router.get("/", handleGetAllPO);
-router.patch("/approval/:id_po", handlePOApproval);
+router.patch("/approval/:id_po", isAdmin, handlePOApproval);
 router.get("/user/:id_user", handleGetPOByUser);
 router.get("/:id_po", handleGetPOById);
 router.patch("/req-cancel/:id_po", handleReqCancelPO);
