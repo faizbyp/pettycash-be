@@ -84,3 +84,9 @@ docker run -p 5000:5000 --env-file .env.production faizbyp/pettycash-be:x.x.x
 - update: plan date on gr details
 - update: company orders to company spent
 - update: add charts on user dashboard
+
+### `1.0.6`
+
+- feat: api protect
+- fix: gr and po not found
+  left join mst_user on approval_by
