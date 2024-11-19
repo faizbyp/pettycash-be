@@ -90,3 +90,9 @@ docker run -p 5000:5000 --env-file .env.production faizbyp/pettycash-be:x.x.x
 - feat: api protect
 - fix: gr and po not found
   left join mst_user on approval_by
+
+### `1.0.7`
+
+- feat: delete po
+- fix: jwt error status code
+- feat: discount
