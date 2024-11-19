@@ -13,7 +13,7 @@ const isAuth = (req, res, next) => {
       jwt.verify(token, process.env.SECRETJWT);
       next();
     } catch (error) {
-      if (error.name === "TokenExpiredError") {
+      if (error.name === "TokenExpiredError" || error.name === "JsonWebTokenError") {
         res.status(401).send({
           message: error.message,
         });
