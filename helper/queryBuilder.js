@@ -11,7 +11,7 @@ const reusableQuery = {
   `,
   companyTotal: `
     SELECT c.company_name,
-    SUM(gri.unit_price * gri.qty) *
+    (SUM(gri.unit_price * gri.qty) - gr.discount) *
       CASE
         WHEN gr.ppn = 0.11 THEN 1.11
         ELSE 1.0
@@ -22,7 +22,7 @@ const reusableQuery = {
     JOIN mst_company c ON po.id_company = c.id_company 
     JOIN goods_receipt_item gri ON gr.id_gr = gri.id_gr
     WHERE gr.status = 'approved'
-    GROUP BY c.company_name, gr.ppn
+    GROUP BY c.company_name, gr.ppn, gr.discount
     ORDER BY company_name ASC
   `,
   amount: `

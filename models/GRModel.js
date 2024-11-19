@@ -66,7 +66,7 @@ const getGRByUser = async (id_user) => {
         gr.id_gr,
         gr.gr_date,
         po.po_date,
-        SUM(gri.unit_price * gri.qty) *
+        (SUM(gri.unit_price * gri.qty) - gr.discount) *
           CASE
             WHEN gr.ppn = 0.11 THEN 1.11
             ELSE 1.0
@@ -107,7 +107,7 @@ const getGRById = async (id_gr) => {
       u.name AS approval_by,
       SUM(gri.unit_price * gri.qty)
       AS sub_total,
-      SUM(gri.unit_price * gri.qty) *
+      (SUM(gri.unit_price * gri.qty) - gr.discount) *
         CASE
           WHEN gr.ppn = 0.11 THEN 1.11
           ELSE 1.0
@@ -184,7 +184,7 @@ const getAllGR = async () => {
           gr.id_gr,
           gr.gr_date,
           po.po_date,
-          SUM(gri.unit_price * gri.qty) *
+          (SUM(gri.unit_price * gri.qty) - gr.discount) *
             CASE
               WHEN gr.ppn = 0.11 THEN 1.11
               ELSE 1.0

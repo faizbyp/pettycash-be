@@ -7,7 +7,6 @@ const {
   editItemQuery,
   reusableQuery,
 } = require("../helper/queryBuilder");
-const { postPOItem } = require("./POItemModel");
 const { v4: uuidv4 } = require("uuid");
 const Emailer = require("../service/mail");
 
@@ -56,7 +55,7 @@ const getPOByUser = async (id_user, status, is_complete) => {
       SELECT 
         po.id_po,
         po.po_date,
-        SUM(poi.unit_price * poi.qty) *
+        (SUM(poi.unit_price * poi.qty) - po.discount) *
           CASE
             WHEN po.ppn = 0.11 THEN 1.11
             ELSE 1.0
@@ -103,7 +102,7 @@ const getPOById = async (id_po) => {
       SELECT po.*,
       u.name AS approval_by,
       SUM(poi.unit_price * poi.qty) AS sub_total,
-      SUM(poi.unit_price * poi.qty) *
+      (SUM(poi.unit_price * poi.qty) - po.discount) *
         CASE
           WHEN po.ppn = 0.11 THEN 1.11
           ELSE 1.0
@@ -181,7 +180,7 @@ const getAllPO = async (reqCancel) => {
         SELECT 
           po.id_po,
           po.po_date,
-          SUM(poi.unit_price * poi.qty) *
+          (SUM(poi.unit_price * poi.qty) - po.discount) *
             CASE
               WHEN po.ppn = 0.11 THEN 1.11
               ELSE 1.0
