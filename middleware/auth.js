@@ -37,6 +37,9 @@ const isAdmin = (req, res, next) => {
   } else {
     try {
       const decoded = jwt.verify(token, process.env.SECRETJWT);
+      console.log(decoded);
+      console.log("id", decoded.id_role);
+      console.log("env id", process.env.ID_ADMIN);
       if (decoded.id_role === process.env.ID_ADMIN) {
         next();
       } else {

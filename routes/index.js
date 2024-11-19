@@ -9,13 +9,13 @@ const User = require("./User");
 const Report = require("./Report");
 // import controllers here
 const Example = require("../controllers/ExampleController");
-const { isAuth, isAdmin } = require("../middleware/auth");
+const { isAuth } = require("../middleware/auth");
 
 // @ using router
 // router.use('/be-api/<endpoint>', <controller>)
 router.use("/be-api/user", User);
 router.use("/be-api/company", isAuth, Company);
-router.use("/be-api/vendor", isAuth, isAdmin, Vendor);
+router.use("/be-api/vendor", isAuth, Vendor);
 router.use("/be-api/uom", isAuth, UOM);
 router.use("/be-api/po", isAuth, PO);
 router.use("/be-api/gr", isAuth, GR);
