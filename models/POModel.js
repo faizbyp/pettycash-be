@@ -440,6 +440,24 @@ const editPO = async (payload, added_items, edited_items, deleted_items, id_po) 
   }
 };
 
+const deletePO = async (id) => {
+  const client = await db.connect();
+  try {
+    await client.query(TRANS.BEGIN);
+    const [deleteQ, deleteV] = deleteQuery("purchase_order", { id_po: id });
+    const result = await client.query(deleteQ, deleteV);
+
+    await client.query(TRANS.COMMIT);
+    return result.rows;
+  } catch (error) {
+    console.log(error);
+    await client.query(TRANS.ROLLBACK);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   postPO,
   getPOByUser,
@@ -450,4 +468,5 @@ module.exports = {
   reqCancelPO,
   cancelPO,
   editPO,
+  deletePO,
 };

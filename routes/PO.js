@@ -8,6 +8,7 @@ const {
   handleReqCancelPO,
   handleCancelPO,
   handleEditPO,
+  handleDeletePO,
 } = require("../controllers/POController");
 const { isAdmin } = require("../middleware/auth");
 const router = express.Router();
@@ -20,5 +21,6 @@ router.get("/:id_po", handleGetPOById);
 router.patch("/req-cancel/:id_po", handleReqCancelPO);
 router.patch("/cancel/:id_po", handleCancelPO);
 router.patch("/edit/:id_po", handleEditPO);
+router.delete("/delete/:id_po", handleDeletePO);
 
 module.exports = router;

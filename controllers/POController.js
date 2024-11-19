@@ -7,6 +7,7 @@ const {
   reqCancelPO,
   cancelPO,
   editPO,
+  deletePO,
 } = require("../models/POModel");
 const { v4: uuidv4 } = require("uuid");
 
@@ -216,6 +217,29 @@ const handleEditPO = async (req, res) => {
   }
 };
 
+const handleDeletePO = async (req, res) => {
+  const idPO = decodeURIComponent(req.params.id_po);
+  try {
+    if (!idPO) {
+      throw new Error("Bad Request");
+    }
+    const result = await deletePO(idPO);
+    res.status(200).send({
+      message: `PO ${idPO} deleted`,
+    });
+  } catch (error) {
+    if (error.message === "Bad Request") {
+      res.status(400).send({
+        message: error.message,
+      });
+    } else {
+      res.status(500).send({
+        message: error.message,
+      });
+    }
+  }
+};
+
 module.exports = {
   handlePostPO,
   handleGetPOByUser,
@@ -225,4 +249,5 @@ module.exports = {
   handleReqCancelPO,
   handleCancelPO,
   handleEditPO,
+  handleDeletePO,
 };
